@@ -235,23 +235,8 @@
                     </a>
                 </li>
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'delivery_logistics' %}active{% endif %}" href="{{ url_for('delivery_logistics') }}">
-                        <i class="bi bi-truck"></i> <span>Delivery</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link {% if request.endpoint in ['products.products', 'products.add_product', 'products.edit_product'] %}active{% endif %}" href="{{ url_for('products') }}">
+                    <a class="nav-link {% if request.endpoint in ['products', 'add_product', 'edit_product'] %}active{% endif %}" href="{{ url_for('products') }}">
                         <i class="bi bi-box-seam"></i> <span>Products</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link {% if request.endpoint == 'stock_management' %}active{% endif %}" href="{{ url_for('stock_management') }}">
-                        <i class="bi bi-boxes"></i> <span>Stock</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link {% if request.endpoint in ['drivers', 'add_driver', 'edit_driver', 'driver_detail'] %}active{% endif %}" href="{{ url_for('drivers') }}">
-                        <i class="bi bi-person-badge"></i> <span>Drivers</span>
                     </a>
                 </li>
                 <li>
@@ -261,28 +246,28 @@
                 </li>
                 <li class="menu-header">Analytics & Reports</li>
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'revenue' %}active{% endif %}" href="{{ url_for('revenue') }}">
+                    <a class="nav-link {% if request.endpoint == 'revenue' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                         <i class="bi bi-cash-stack"></i> <span>Revenue</span>
                     </a>
                 </li>
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('analytics') }}">
+                    <a class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                         <i class="bi bi-graph-up"></i> <span>Analytics</span>
                     </a>
                 </li>
                 <li class="menu-header">System</li>
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">
+                    <a class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                         <i class="bi bi-bell"></i> <span>Notifications</span>
                     </a>
                 </li>
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'activity_logs' %}active{% endif %}" href="{{ url_for('activity_logs') }}">
+                    <a class="nav-link {% if request.endpoint == 'activity_logs' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                         <i class="bi bi-clock-history"></i> <span>Activity Logs</span>
                     </a>
                 </li>
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('settings') }}">
+                    <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                         <i class="bi bi-gear"></i> <span>Settings</span>
                     </a>
                 </li>
@@ -369,7 +354,7 @@
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="{{ url_for('settings') }}">
+                                <a class="dropdown-item" href="{{ url_for('dashboard') }}">
                                     <i class="bi bi-gear me-2"></i> Settings
                                 </a>
                             </li>
