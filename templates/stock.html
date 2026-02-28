@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-box-seam me-2"></i>Stock Management</h2>
+    <a href="{{ url_for('products.products') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Add Product
+    </a>
+</div>
+
+<!-- Low Stock Alert -->
+{% set low_stock = products | selectattr('stock', 'lt', 10) | list %}
+{% if low_stock %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Low Stock Alert!</strong> {{ low_stock | length }} product(s) have low stock levels.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- Stock Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Current Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if product.imageUrl %}
+                                <img src="{{ product.imageUrl }}" alt="{{ product.name }}" 
+                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;" class="me-2">
+                                {% endif %}
+                                <strong>{{ product.name }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ product.price }}</td>
+                        <td>
+                            <span class="badge {% if product.stock|default(0) < 10 %}bg-danger{% elif product.stock|default(0) < 50 %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ product.stock|default(0) }} units
+                            </span>
+                        </td>
+                        <td>
+                            {% if product.stock|default(0) == 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% elif product.stock|default(0) < 10 %}
+                                <span class="badge bg-warning">Low Stock</span>
+                            {% else %}
+                                <span class="badge bg-success">In Stock</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updateStockModal{{ product.id }}">
+                                <i class="bi bi-pencil"></i> Update
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Update Stock Modal -->
+                    <div class="modal fade" id="updateStockModal{{ product.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Update Stock - {{ product.name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('update_stock', product_id=product.id) }}">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Current Stock: <strong>{{ product.stock|default(0) }}</strong></label>
+                                            <input type="number" class="form-control" name="stock" value="{{ product.stock|default(0) }}" min="0" required>
+                                            <div class="form-text">Enter the new stock quantity</div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Update Stock</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Statistics -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ products | selectattr('stock', 'gt', 50) | list | length }}</h3>
+                <p class="text-muted mb-0">Well Stocked</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ products | selectattr('stock', 'lt', 50) | selectattr('stock', 'gt', 10) | list | length }}</h3>
+                <p class="text-muted mb-0">Medium Stock</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-danger">{{ products | selectattr('stock', 'lt', 10) | list | length }}</h3>
+                <p class="text-muted mb-0">Low Stock</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

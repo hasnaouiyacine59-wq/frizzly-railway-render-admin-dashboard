@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Delivery Logistics{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-truck me-2"></i>Delivery Logistics</h2>
+    <span class="badge bg-primary fs-6">{{ deliveries | length }} Active Deliveries</span>
+</div>
+
+<!-- Deliveries List -->
+<div class="row">
+    {% for order in deliveries %}
+    <div class="col-md-6 mb-4">
+        <div class="card {% if order.status == 'ON_WAY' %}border-success{% else %}border-warning{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Order #{{ order.orderId[:8] }}</strong>
+                <span class="badge {% if order.status == 'ON_WAY' %}bg-success{% else %}bg-warning{% endif %}">
+                    {{ order.status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <!-- Order Details -->
+                <div class="mb-3">
+                    <h6><i class="bi bi-cart me-2"></i>Order Details</h6>
+                    <p class="mb-1"><strong>Total:</strong> ${{ "%.2f"|format(order.totalAmount) }}</p>
+                    <p class="mb-1"><strong>Items:</strong> {{ order['items'] | length }}</p>
+                    <p class="mb-0"><strong>Time:</strong> {{ order.timestamp | int | timestamp_to_date }}</p>
+                </div>
+
+                <!-- Delivery Location -->
+                {% if order.deliveryLocation %}
+                <div class="mb-3">
+                    <h6><i class="bi bi-geo-alt me-2"></i>Delivery Location</h6>
+                    <p class="mb-0">
+                        <a href="https://www.google.com/maps?q={{ order.deliveryLocation.latitude }},{{ order.deliveryLocation.longitude }}" 
+                           target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-map"></i> View on Map
+                        </a>
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Driver Info -->
+                {% if order.driverName %}
+                <div class="mb-3">
+                    <h6><i class="bi bi-person me-2"></i>Assigned Driver</h6>
+                    <p class="mb-1"><strong>Name:</strong> {{ order.driverName }}</p>
+                    <p class="mb-0"><strong>Phone:</strong> {{ order.driverPhone }}</p>
+                </div>
+                {% else %}
+                <div class="alert alert-warning mb-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>No driver assigned yet
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="d-grid gap-2">
+                    {% if not order.driverName %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignDriverModal{{ order.id }}">
+                        <i class="bi bi-person-plus me-2"></i>Assign Driver
+                    </button>
+                    {% endif %}
+                    <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-eye me-2"></i>View Full Details
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assign Driver Modal -->
+        <div class="modal fade" id="assignDriverModal{{ order.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Assign Driver - Order #{{ order.orderId[:8] }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('orders.assign_driver', order_id=order.id) }}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Driver Name</label>
+                                <input type="text" class="form-control" name="driver_name" value="John Delivery" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Driver Phone</label>
+                                <input type="tel" class="form-control" name="driver_phone" value="+1234567890" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Assign Driver</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not deliveries %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle me-2"></i>No active deliveries at the moment
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delivery Statistics -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ deliveries | selectattr('status', 'equalto', 'CONFIRMED') | list | length }}</h3>
+                <p class="text-muted mb-0">Awaiting Pickup</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ deliveries | selectattr('status', 'equalto', 'ON_WAY') | list | length }}</h3>
+                <p class="text-muted mb-0">Out for Delivery</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

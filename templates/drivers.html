@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Drivers - FRIZZLY Admin{% endblock %}
+{% block page_title %}Driver Management{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card primary">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ stats.total }}</h3>
+                    <p class="text-muted mb-0">Total Drivers</p>
+                </div>
+                <div class="icon"><i class="bi bi-people"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ stats.available }}</h3>
+                    <p class="text-muted mb-0">Available</p>
+                </div>
+                <div class="icon"><i class="bi bi-check-circle"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ stats.on_delivery }}</h3>
+                    <p class="text-muted mb-0">On Delivery</p>
+                </div>
+                <div class="icon"><i class="bi bi-truck"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card info">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ stats.offline }}</h3>
+                    <p class="text-muted mb-0">Offline</p>
+                </div>
+                <div class="icon"><i class="bi bi-x-circle"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Drivers Table -->
+<div class="table-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0"><i class="bi bi-people me-2"></i>All Drivers</h5>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('add_driver') }}" class="btn btn-gradient">
+            <i class="bi bi-plus-circle me-2"></i>Add Driver
+        </a>
+        {% endif %}
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Vehicle</th>
+                    <th>Status</th>
+                    <th>Deliveries</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in drivers %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('driver_detail', driver_id=driver.id) }}" class="text-decoration-none">
+                            <strong>{{ driver.name }}</strong>
+                        </a>
+                    </td>
+                    <td>{{ driver.phone }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ driver.vehicleType|upper }}</span>
+                        <small class="text-muted">{{ driver.vehicleNumber }}</small>
+                    </td>
+                    <td>
+                        {% if driver.status == 'available' %}
+                        <span class="badge bg-success">Available</span>
+                        {% elif driver.status == 'on_delivery' %}
+                        <span class="badge bg-warning">On Delivery</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Offline</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ driver.totalDeliveries or 0 }}</td>
+                    <td>
+                        <i class="bi bi-star-fill text-warning"></i> {{ driver.rating or 5.0 }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('driver_detail', driver_id=driver.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('edit_driver', driver_id=driver.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('delete_driver', driver_id=driver.id) }}" class="d-inline" onsubmit="return confirm('Delete this driver?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <i class="bi bi-people" style="font-size: 48px; color: #ccc;"></i>
+                        <p class="text-muted mt-2">No drivers yet</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

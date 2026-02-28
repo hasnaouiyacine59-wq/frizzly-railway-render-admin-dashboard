@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - FRIZZLY Admin{% endblock %}
+{% block page_title %}Analytics & Reports{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Order Status Chart -->
+    <div class="col-md-6">
+        <div class="table-card">
+            <h5 class="mb-3"><i class="bi bi-pie-chart me-2"></i>Orders by Status</h5>
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Revenue Chart -->
+    <div class="col-md-6">
+        <div class="table-card">
+            <h5 class="mb-3"><i class="bi bi-graph-up me-2"></i>Monthly Revenue</h5>
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Status Breakdown Table -->
+    <div class="col-12">
+        <div class="table-card">
+            <h5 class="mb-3"><i class="bi bi-table me-2"></i>Status Breakdown</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Count</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set total = data.status_counts.values()|sum %}
+                        {% for status, count in data.status_counts.items() %}
+                        <tr>
+                            <td><span class="badge badge-{{ status|lower }}">{{ status }}</span></td>
+                            <td><strong>{{ count }}</strong></td>
+                            <td>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar" style="width: {{ (count / total * 100)|round }}%">
+                                        {{ (count / total * 100)|round }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Define a color mapping for statuses
+const statusColors = {
+    'PENDING': '#ffc107', // yellow
+    'CONFIRMED': '#17a2b8', // info blue
+    'PREPARING_ORDER': '#6c757d', // gray
+    'READY_FOR_PICKUP': '#007bff', // primary blue
+    'ON_WAY': '#6f42c1', // purple
+    'OUT_FOR_DELIVERY': '#6f42c1', // purple (same as ON_WAY for now)
+    'DELIVERED': '#28a745', // green
+    'DELIVERY_ATTEMPT_FAILED': '#dc3545', // red
+    'CANCELLED': '#dc3545', // red
+    'RETURNED': '#fd7e14' // orange
+};
+
+// Status Pie Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusData = {{ data.status_counts|tojson }};
+const statusLabels = Object.keys(statusData);
+const statusValues = Object.values(statusData);
+const statusBackgrounds = statusLabels.map(status => statusColors[status.toUpperCase()] || '#999');
+
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: statusLabels,
+        datasets: [{
+            data: statusValues,
+            backgroundColor: statusBackgrounds,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Revenue Line Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const revenueData = {{ data.monthly_revenue|tojson }};
+const revenueLabels = Object.keys(revenueData);
+const revenueValues = Object.values(revenueData);
+
+new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: revenueLabels,
+        datasets: [{
+            label: 'Revenue ($)',
+            data: revenueValues,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '
+ + value;
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

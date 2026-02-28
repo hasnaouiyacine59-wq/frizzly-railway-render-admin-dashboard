@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}User Details - FRIZZLY Admin{% endblock %}
+{% block page_title %}User Details{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="table-card text-center">
+            <div class="mb-3">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                    <i class="bi bi-person fs-1"></i>
+                </div>
+            </div>
+            <h5>{{ user.displayName or user.name or 'User' }}</h5>
+            <p class="text-muted mb-3">{{ user.email or 'No email' }}</p>
+            
+            <div class="text-start mt-4">
+                <p class="mb-2"><strong>User ID:</strong></p>
+                <p class="text-muted small"><code>{{ user.userId or user.id }}</code></p>
+                
+                {% if user.phoneNumbers %}
+                <p class="mb-2"><strong>Phone Numbers:</strong></p>
+                {% for phone in user.phoneNumbers %}
+                <p class="text-muted">{{ phone }}</p>
+                {% endfor %}
+                {% elif user.phone and user.phone != 'N/A' and user.phone != '' %}
+                <p class="mb-2"><strong>Phone:</strong></p>
+                <p class="text-muted">{{ user.phone }}</p>
+                {% else %}
+                <p class="mb-2"><strong>Phone:</strong></p>
+                <p class="text-muted">Not provided</p>
+                {% endif %}
+                
+                {% if user.deviceInfo %}
+                <p class="mb-2 mt-3"><strong>Device Info:</strong></p>
+                <p class="text-muted small">
+                    <i class="bi bi-phone me-1"></i>{{ user.deviceInfo.get('model', 'Unknown') }}<br>
+                    <i class="bi bi-android2 me-1"></i>Android {{ user.deviceInfo.get('androidVersion', 'Unknown') }}<br>
+                    <i class="bi bi-cpu me-1"></i>{{ user.deviceInfo.get('manufacturer', 'Unknown') }}
+                </p>
+                {% endif %}
+                
+                {% if user.appVersion %}
+                <p class="mb-2"><strong>App Version:</strong></p>
+                <p class="text-muted">{{ user.appVersion }}</p>
+                {% endif %}
+                
+                {% if user.lastLogin %}
+                <p class="mb-2"><strong>Last Login:</strong></p>
+                <p class="text-muted">{{ user.lastLogin }}</p>
+                {% endif %}
+                
+                <p class="mb-2"><strong>Joined:</strong></p>
+                <p class="text-muted">{{ user.createdAt if user.createdAt else 'N/A' }}</p>
+            </div>
+            
+            <a href="{{ url_for('users') }}" class="btn btn-outline-secondary w-100 mt-3">
+                <i class="bi bi-arrow-left me-2"></i>Back to Users
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="table-card">
+            <h5 class="mb-4"><i class="bi bi-bag me-2"></i>Order History ({{ orders|length }})</h5>
+            
+            {% if orders %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td><strong>#{{ order.orderId[-8:] if order.orderId else order.id[-8:] }}</strong></td>
+                            <td>{{ order['items']|length }} items</td>
+                            <td><strong>${{ "%.2f"|format(order.totalAmount) }}</strong></td>
+                            <td><span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span></td>
+                            <td>{{ order.createdAt[:10] if order.createdAt and order.createdAt is string else 'N/A' }}</td>
+                            <td>
+                                <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-bag-x fs-1 d-block mb-2"></i>
+                No orders yet
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

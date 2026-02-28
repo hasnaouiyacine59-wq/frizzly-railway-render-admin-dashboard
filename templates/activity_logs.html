@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Logs - FRIZZLY Admin{% endblock %}
+{% block page_title %}Activity Logs{% endblock %}
+
+{% block content %}
+<div class="table-card">
+    <h5 class="mb-4"><i class="bi bi-clock-history me-2"></i>Recent Activities</h5>
+    
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.timestamp }}</td>
+                    <td>{{ log.userName }}</td>
+                    <td>
+                        <span class="badge bg-primary">{{ log.action }}</span>
+                    </td>
+                    <td>{{ log.details }}</td>
+                    <td><small class="text-muted">{{ log.ipAddress }}</small></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">No activity logs</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

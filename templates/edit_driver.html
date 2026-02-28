@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Driver - FRIZZLY Admin{% endblock %}
+{% block page_title %}Edit Driver{% endblock %}
+
+{% block content %}
+<div class="table-card">
+    <form method="POST">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Name *</label>
+                <input type="text" name="name" class="form-control" value="{{ driver.name }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Phone *</label>
+                <input type="tel" name="phone" class="form-control" value="{{ driver.phone }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ driver.email }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Vehicle Type</label>
+                <select name="vehicle_type" class="form-select">
+                    <option value="bike" {% if driver.vehicleType == 'bike' %}selected{% endif %}>Bike</option>
+                    <option value="scooter" {% if driver.vehicleType == 'scooter' %}selected{% endif %}>Scooter</option>
+                    <option value="car" {% if driver.vehicleType == 'car' %}selected{% endif %}>Car</option>
+                    <option value="van" {% if driver.vehicleType == 'van' %}selected{% endif %}>Van</option>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Vehicle Number</label>
+                <input type="text" name="vehicle_number" class="form-control" value="{{ driver.vehicleNumber }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="available" {% if driver.status == 'available' %}selected{% endif %}>Available</option>
+                    <option value="on_delivery" {% if driver.status == 'on_delivery' %}selected{% endif %}>On Delivery</option>
+                    <option value="offline" {% if driver.status == 'offline' %}selected{% endif %}>Offline</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-gradient">
+                <i class="bi bi-check-circle me-2"></i>Update Driver
+            </button>
+            <a href="{{ url_for('drivers') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

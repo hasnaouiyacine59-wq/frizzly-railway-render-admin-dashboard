@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FRIZZLY Admin{% endblock %}
+{% block page_title %}
+Dashboard 
+<span id="connectionStatus" class="badge bg-secondary ms-2">Connecting...</span>
+{% endblock %}
+
+{% block content %}
+<!-- Low Stock Alert -->
+{% if stats.low_stock_products > 0 %}
+<div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Warning!</strong> {{ stats.low_stock_products }} product(s) have low stock levels.
+    <a href="{{ url_for('stock_management') }}" class="alert-link">View Stock</a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-2">Total Revenue</h6>
+                    <h2 class="mb-0">${{ "%.2f"|format(stats.total_revenue) }}</h2>
+                </div>
+                <div class="icon">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-muted mb-2">Products</h6>
+                    <h2 class="mb-0">{{ stats.total_products }}</h2>
+                </div>
+                <div class="icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="table-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Orders</h5>
+        <a href="{{ url_for('orders.orders') }}" class="btn btn-sm btn-gradient">View All</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td><strong>#{{ order.orderId[-8:] }}</strong></td>
+                    <td>{{ order.userId[:20] }}</td>
+                    <td>{{ order['items']|length }} items</td>
+                    <td><strong>${{ "%.2f"|format(order.totalAmount) }}</strong></td>
+                    <td>
+                        <span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span>
+                    </td>
+                    <td>{{ order.createdAt[:10] if order.createdAt else 'N/A' }}</td>
+                    <td>
+                        <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">No orders yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// Real-time order notifications via SSE (dashboard specific)
+let connectionAttempts = 0;
+const maxRetries = 5;
+
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    connectionAttempts++;
+    console.log(`🔄 Connecting to SSE (attempt ${connectionAttempts})...`);
+    console.log('🔗 SSE URL:', window.location.origin + '/api/stream-orders');
+    
+    // Set timeout to detect stuck connection
+    const connectionTimeout = setTimeout(() => {
+        console.error('⏱️ SSE connection timeout (10s)');
+        const indicator = document.getElementById('connectionStatus');
+        if (indicator && indicator.textContent === 'Connecting...') {
+            indicator.className = 'badge bg-warning';
+            indicator.textContent = 'Timeout';
+            // Force error to trigger retry
+            if (eventSource) eventSource.close();
+        }
+    }, 10000);
+    
+    eventSource = new EventSource('/api/stream-orders');
+    
+    eventSource.onopen = function() {
+        clearTimeout(connectionTimeout);
+        console.log('✅ SSE Connected');
+        connectionAttempts = 0; // Reset on successful connection
+        
+        // Update connection status indicator
+        const indicator = document.getElementById('connectionStatus');
+        if (indicator) {
+            indicator.className = 'badge bg-success';
+            indicator.textContent = 'Live';
+        }
+    };
+    
+    eventSource.addEventListener('new_order', function(e) {
+        const order = JSON.parse(e.data);
+        console.log('🔔 New order received:', order);
+        
+        // Update notification badge
+        updateNotificationBadge(1);
+        
+        // Add to notification list
+        addNotificationToList('New Order!', `Order #${order.orderId.slice(-8)} - $${order.totalAmount.toFixed(2)}`, 'success');
+        
+        // Show notification
+        showNotification('New Order!', `Order #${order.orderId.slice(-8)} - $${order.totalAmount.toFixed(2)}`);
+        
+        // Play sound
+        playNotificationSound();
+        
+        // Update stats dynamically instead of reloading
+        updateDashboardStats();
+        
+        // Reload page after 3 seconds to show new order in table
+        setTimeout(() => {
+            console.log('🔄 Reloading page to show new order...');
+            location.reload();
+        }, 3000);
+    });
+    
+    eventSource.addEventListener('order_update', function(e) {
+        const order = JSON.parse(e.data);
+        console.log('📝 Order updated:', order);
+        
+        // Update notification badge
+        updateNotificationBadge(1);
+        
+        // Add to notification list
+        addNotificationToList('Order Updated', `Order #${order.orderId.slice(-8)} - ${order.status}`, 'info');
+        
+        // Show notification
+        showNotification('Order Updated', `Order #${order.orderId.slice(-8)} - ${order.status}`);
+        
+        // Update stats
+        updateDashboardStats();
+    });
+    
+    eventSource.onerror = function(e) {
+        console.error('❌ SSE Error:', e);
+        console.log('ReadyState:', eventSource.readyState);
+        
+        // Update connection status indicator
+        const indicator = document.getElementById('connectionStatus');
+        if (indicator) {
+            indicator.className = 'badge bg-danger';
+            indicator.textContent = 'Disconnected';
+        }
+        
+        eventSource.close();
+        
+        // Retry with exponential backoff
+        if (connectionAttempts < maxRetries) {
+            const delay = Math.min(1000 * Math.pow(2, connectionAttempts), 30000);
+            console.log(`⏳ Reconnecting in ${delay/1000}s...`);
+            setTimeout(connectSSE, delay);
+        } else {
+            console.error('❌ Max retries reached. Please refresh the page.');
+            if (indicator) {
+                indicator.className = 'badge bg-warning';
+                indicator.textContent = 'Offline';
+            }
+        }
+    };
+}
+
+function updateDashboardStats() {
+    // Fetch updated stats without full page reload
+    fetch('/api/dashboard-stats')
+        .then(r => r.json())
+        .then(data => {
+            console.log('📊 Updated stats:', data);
+            // Update stat cards if they exist
+            const totalOrders = document.querySelector('.stat-card.primary h2');
+            const pendingOrders = document.querySelector('.stat-card.info h2');
+            if (totalOrders && data.total_orders) totalOrders.textContent = data.total_orders;
+            if (pendingOrders && data.pending_orders) pendingOrders.textContent = data.pending_orders;
+        })
+        .catch(e => console.error('Failed to update stats:', e));
+}
+
+function showNotification(title, message) {
+    // Browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+            body: message,
+            icon: '/static/logo.png',
+            badge: '/static/badge.png'
+        });
+    }
+    
+    // Toast notification (Bootstrap) - positioned below navbar
+    const toast = document.createElement('div');
+    toast.className = 'toast position-fixed end-0 m-3';
+    toast.style.top = '80px'; // Below navbar
+    toast.style.zIndex = '9999'; // Above everything
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">${title}</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">${message}</div>
+    `;
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    setTimeout(() => toast.remove(), 5000);
+}
+
+function playNotificationSound() {
+    const audio = new Audio('/static/notification.mp3');
+    audio.play().catch(e => console.log('Sound play failed:', e));
+}
+
+function updateNotificationBadge(increment = 1) {
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+        let count = parseInt(badge.textContent) || 0;
+        count += increment;
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+}
+
+function addNotificationToList(title, message, type = 'info') {
+    const list = document.getElementById('notificationList');
+    if (!list) return;
+    
+    // Remove "no notifications" message if exists
+    const emptyMsg = list.querySelector('.text-muted');
+    if (emptyMsg) {
+        emptyMsg.remove();
+    }
+    
+    // Create notification item
+    const item = document.createElement('li');
+    const iconClass = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-info-circle-fill text-info';
+    item.innerHTML = `
+        <a class="dropdown-item py-2" href="#">
+            <div class="d-flex align-items-start">
+                <i class="bi ${iconClass} me-2 mt-1"></i>
+                <div class="flex-grow-1">
+                    <strong class="d-block">${title}</strong>
+                    <small class="text-muted">${message}</small>
+                    <small class="d-block text-muted">${new Date().toLocaleTimeString()}</small>
+                </div>
+            </div>
+        </a>
+    `;
+    
+    // Add to top of list
+    list.insertBefore(item, list.firstChild);
+    
+    // Limit to 10 notifications
+    while (list.children.length > 10) {
+        list.removeChild(list.lastChild);
+    }
+}
+
+// Request notification permission
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+// Clear notifications function (for base.html button)
+window.clearNotifications = function() {
+    const badge = document.getElementById('notificationBadge');
+    const list = document.getElementById('notificationList');
+    
+    if (badge) {
+        badge.textContent = '0';
+        badge.style.display = 'none';
+    }
+    
+    if (list) {
+        list.innerHTML = `
+            <li class="text-center text-muted py-3">
+                <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                No new notifications
+            </li>
+        `;
+    }
+};
+
+// Connect on page load
+connectSSE();
+
+// Reconnect on visibility change
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && (!eventSource || eventSource.readyState === EventSource.CLOSED)) {
+        connectSSE();
+    }
+});
+</script>
+{% endblock %}

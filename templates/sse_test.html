@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSE Test - Admin Dashboard</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 3px solid #007bff; }
+        .error { border-left-color: #dc3545; }
+        .success { border-left-color: #28a745; }
+        .info { border-left-color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>SSE Connection Test</h1>
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <h2>Connection Status: <span id="status">Not Connected</span></h2>
+    
+    <h3>Logs:</h3>
+    <div id="logs"></div>
+
+    <script>
+        let eventSource = null;
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = 'log ' + type;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            document.getElementById('logs').prepend(div);
+        }
+        
+        function connect() {
+            if (eventSource) {
+                log('Already connected', 'info');
+                return;
+            }
+            
+            log('Connecting to /api/stream-orders...', 'info');
+            eventSource = new EventSource('/api/stream-orders');
+            
+            eventSource.onopen = function() {
+                document.getElementById('status').textContent = 'Connected ✅';
+                document.getElementById('status').style.color = 'green';
+                log('SSE Connected!', 'success');
+            };
+            
+            eventSource.onmessage = function(e) {
+                log('Message: ' + e.data, 'info');
+            };
+            
+            eventSource.addEventListener('new_order', function(e) {
+                log('NEW ORDER: ' + e.data, 'success');
+                const order = JSON.parse(e.data);
+                alert('New Order: ' + order.orderId);
+            });
+            
+            eventSource.addEventListener('order_update', function(e) {
+                log('ORDER UPDATE: ' + e.data, 'info');
+            });
+            
+            eventSource.onerror = function(e) {
+                document.getElementById('status').textContent = 'Error/Disconnected ❌';
+                document.getElementById('status').style.color = 'red';
+                log('SSE Error: ' + JSON.stringify(e), 'error');
+                log('ReadyState: ' + eventSource.readyState, 'error');
+            };
+        }
+        
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                document.getElementById('status').textContent = 'Disconnected';
+                document.getElementById('status').style.color = 'gray';
+                log('Disconnected', 'info');
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        // Auto-connect on load
+        window.onload = function() {
+            log('Page loaded. Click Connect to start SSE.', 'info');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FRIZZLY Admin{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f8f9fa; }
+        .sidebar { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            height: 100vh; 
+            width: 250px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 20px 0; 
+            z-index: 1000; 
+            transition: all 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+        .sidebar .logo { color: white; font-size: 24px; font-weight: 700; padding: 0 20px; margin-bottom: 30px; }
+        .sidebar .nav-link { color: rgba(255,255,255,0.8); padding: 12px 20px; margin: 5px 0; transition: all 0.3s; border-left: 3px solid transparent; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: white; background: rgba(255,255,255,0.1); border-left-color: white; }
+        .sidebar .nav-link i { margin-right: 10px; width: 20px; }
+        .main-content { 
+            margin-left: 250px; 
+            padding: 20px; 
+            transition: all 0.3s;
+        }
+        .main-content.shifted {
+            margin-left: 0;
+        }
+        .navbar { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .stat-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card .icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .stat-card.primary .icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .stat-card.success .icon { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .stat-card.warning .icon { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .stat-card.info .icon { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+        .table-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        /* New badge styles for granular statuses */
+        .badge-pending { background-color: #ffc107; color: #212529; } /* yellow */
+        .badge-confirmed { background-color: #17a2b8; color: #fff; } /* info blue */
+        .badge-preparing_order { background-color: #6c757d; color: #fff; } /* gray */
+        .badge-ready_for_pickup { background-color: #007bff; color: #fff; } /* primary blue */
+        .badge-on_way, .badge-out_for_delivery { background-color: #6f42c1; color: #fff; } /* purple */
+        .badge-delivered { background-color: #28a745; color: #fff; } /* green */
+        .badge-delivery_attempt_failed { background-color: #dc3545; color: #fff; } /* red */
+        .badge-cancelled { background-color: #dc3545; color: #fff; } /* red */
+        .badge-returned { background-color: #fd7e14; color: #fff; } /* orange */
+
+        .btn-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; }
+        .btn-gradient:hover { opacity: 0.9; color: white; }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .sidebar {
+                left: -250px; /* Hide sidebar by default on small screens */
+            }
+            .sidebar.show {
+                left: 0; /* Show sidebar when toggled */
+            }
+            .main-content {
+                margin-left: 0; /* No margin on small screens */
+            }
+            .navbar .navbar-brand {
+                margin-left: 15px; /* Adjust brand position */
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="bi bi-basket"></i> FRIZZLY
+        </div>
+        <nav class="nav flex-column">
+            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a class="nav-link {% if request.endpoint in ['orders', 'order_detail'] %}active{% endif %}" href="{{ url_for('orders') }}">
+                <i class="bi bi-cart-check"></i> Orders
+            </a>
+            <a class="nav-link {% if request.endpoint == 'delivery_logistics' %}active{% endif %}" href="{{ url_for('delivery_logistics') }}">
+                <i class="bi bi-truck"></i> Delivery
+            </a>
+            <a class="nav-link {% if request.endpoint in ['products', 'add_product', 'edit_product'] %}active{% endif %}" href="{{ url_for('products') }}">
+                <i class="bi bi-box-seam"></i> Products
+            </a>
+            <a class="nav-link {% if request.endpoint == 'stock_management' %}active{% endif %}" href="{{ url_for('stock_management') }}">
+                <i class="bi bi-boxes"></i> Stock
+            </a>
+            <a class="nav-link {% if request.endpoint in ['drivers', 'add_driver', 'edit_driver', 'driver_detail'] %}active{% endif %}" href="{{ url_for('drivers') }}">
+                <i class="bi bi-person-badge"></i> Drivers
+            </a>
+            <a class="nav-link {% if request.endpoint == 'users' %}active{% endif %}" href="{{ url_for('users') }}">
+                <i class="bi bi-people"></i> Users
+            </a>
+            <a class="nav-link {% if request.endpoint == 'revenue' %}active{% endif %}" href="{{ url_for('revenue') }}">
+                <i class="bi bi-cash-stack"></i> Revenue
+            </a>
+            <a class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('analytics') }}">
+                <i class="bi bi-graph-up"></i> Analytics
+            </a>
+            <a class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">
+                <i class="bi bi-bell"></i> Notifications
+            </a>
+            <a class="nav-link {% if request.endpoint == 'activity_logs' %}active{% endif %}" href="{{ url_for('activity_logs') }}">
+                <i class="bi bi-clock-history"></i> Activity Logs
+            </a>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 20px;">
+            <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('settings') }}">
+                <i class="bi bi-gear"></i> Settings
+            </a>
+            <a class="nav-link" href="{{ url_for('logout') }}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <button class="btn btn-link d-lg-none me-3" type="button" id="sidebarToggle">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <span class="navbar-brand mb-0 h1">{% block page_title %}Dashboard{% endblock %}</span>
+                <div class="d-flex align-items-center">
+                    <!-- Notification Bell Dropdown -->
+                    <div class="dropdown me-3">
+                        <button class="btn btn-link position-relative p-0" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none; color: inherit;">
+                            <i class="bi bi-bell-fill fs-5"></i>
+                            <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 10px;">0</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 400px; overflow-y: auto;">
+                            <li class="dropdown-header d-flex justify-content-between align-items-center">
+                                <span><strong>Notifications</strong></span>
+                                <button class="btn btn-sm btn-link text-decoration-none" onclick="clearNotifications()" style="font-size: 12px;">Clear All</button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <div id="notificationList">
+                                <li class="text-center text-muted py-3">
+                                    <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                                    No new notifications
+                                </li>
+                            </div>
+                        </ul>
+                    </div>
+                    
+                    <!-- Admin User Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-link text-decoration-none p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color: inherit;">
+                            <i class="bi bi-person-circle fs-5"></i>
+                            <span class="ms-2">{{ current_user.name }}</span>
+                            <i class="bi bi-chevron-down ms-1" style="font-size: 12px;"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li class="dropdown-header">
+                                <strong>{{ current_user.name }}</strong><br>
+                                <small class="text-muted">{{ current_user.email }}</small>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('settings') }}">
+                                    <i class="bi bi-gear me-2"></i> Settings
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Notification Toast -->
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+            <div id="orderNotification" class="toast hide" role="alert">
+                <div class="toast-header bg-success text-white">
+                    <i class="bi bi-bell-fill me-2"></i>
+                    <strong class="me-auto">New Order!</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body" id="notificationBody">
+                    A new order has been placed!
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Real-time notifications handled below -->
+            const list = document.getElementById('notificationList');
+            const badge = document.getElementById('notificationBadge');
+            
+            if (notifications.length === 0) {
+                list.innerHTML = `
+                    <li class="text-center text-muted py-3">
+                        <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                        No new notifications
+                    </li>
+                `;
+                badge.style.display = 'none';
+            } else {
+                list.innerHTML = notifications.map(notif => `
+                    <li>
+                        <a class="dropdown-item" href="/orders/${notif.id}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>New Order #${notif.orderId.slice(-8)}</strong>
+                                    <div class="text-muted small">$${notif.totalAmount.toFixed(2)}</div>
+                                </div>
+                                <small class="text-muted">${formatTime(notif.timestamp)}</small>
+                            </div>
+                        </a>
+                    </li>
+                `).join('');
+                badge.textContent = notifications.length;
+                badge.style.display = 'inline-block';
+            }
+        }
+
+        function formatTime(date) {
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            return date.toLocaleDateString();
+        }
+
+        function clearNotifications() {
+            notifications = [];
+            updateNotificationDropdown();
+        }
+
+        window.clearNotifications = clearNotifications;
+
+        function showNotification(count) {
+            const toast = new bootstrap.Toast(document.getElementById('orderNotification'));
+            document.getElementById('notificationBody').textContent = 
+                count === 1 ? 'A new order has been placed!' : `${count} new orders have been placed!`;
+            toast.show();
+        }
+
+        function playNotificationSound() {
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHAU2jdXvzn0pBSh+zPDajzsKElyx6OyrWBUIQ5zd8sFuJAUuhM/z24k2CBhku+zooVARC0yl4fG5ZRwFNo3V7859KQUofsz');
+            audio.play().catch(() => {});
+        }
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+    <script>
+// ... existing sidebar toggle script ...
+
+// Socket.IO client for real-time updates
+document.addEventListener('DOMContentLoaded', function() {
+    const socket = io(); // Connect to the default namespace
+
+    socket.on('connect', function() {
+        console.log('Socket.IO connected!');
+    });
+
+    socket.on('disconnect', function() {
+        console.log('Socket.IO disconnected!');
+    });
+
+    socket.on('order_status_update', function(data) {
+        console.log('Order status updated:', data);
+        // Example: Flash a message or update a specific order's status on the page
+        const orderId = data.order_id;
+        const newStatus = data.new_status;
+        
+        // You might want to update the UI here, e.g., change a badge color/text
+        // For now, let's just flash a message
+        const flashContainer = document.querySelector('.main-content');
+        if (flashContainer) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info alert-dismissible fade show';
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `Order <strong>#${orderId.slice(-8)}</strong> status updated to <strong>${newStatus.replace('_', ' ').title()}</strong>!
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            flashContainer.prepend(alertDiv);
+        }
+    });
+
+    socket.on('new_order', function(data) {
+        console.log('New order received:', data);
+        // Trigger the existing new order notification logic
+        const order = {
+            id: data.order_id,
+            orderId: data.order_id,
+            totalAmount: data.total_amount,
+            timestamp: new Date()
+        };
+        addNotification(order); // Function from existing base.html script
+        showNotification(1); // Show a single new order notification
+        playNotificationSound(); // Play sound
+    });
+});
+    </script>
+    
+    {% block extra_js %}
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+
+    // Initial check for screen size on load
+    if (window.innerWidth <= 992) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('shifted');
+    }
+
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('show'); // For mobile overlay
+        // For larger screens, collapse/expand
+        if (window.innerWidth > 992) {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('shifted');
+        }
+    });
+
+    // Close sidebar when clicking outside on small screens
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 992 && sidebar.classList.contains('show') && 
+            !sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+            sidebar.classList.remove('show');
+        }
+    });
+
+    // Adjust sidebar on window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 992) {
+            sidebar.classList.remove('collapsed', 'show');
+            mainContent.classList.remove('shifted');
+        } else {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('shifted');
+            sidebar.classList.remove('show'); // Ensure it's hidden on resize if it was open
+        }
+    });
+
+    // Socket.IO client for real-time updates
+    const socket = io(); // Connect to the default namespace
+
+    socket.on('connect', function() {
+        console.log('Socket.IO connected!');
+    });
+
+    socket.on('disconnect', function() {
+        console.log('Socket.IO disconnected!');
+    });
+
+    socket.on('order_status_update', function(data) {
+        console.log('Order status updated:', data);
+        const orderId = data.order_id;
+        const newStatus = data.new_status;
+        
+        const flashContainer = document.querySelector('.main-content');
+        if (flashContainer) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info alert-dismissible fade show';
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `Order <strong>#${orderId.slice(-8)}</strong> status updated to <strong>${newStatus.replace('_', ' ').title()}</strong>!
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            flashContainer.prepend(alertDiv);
+        }
+    });
+
+    socket.on('new_order', function(data) {
+        console.log('New order received:', data);
+        const order = {
+            id: data.order_id,
+            orderId: data.order_id,
+            totalAmount: data.total_amount,
+            timestamp: new Date()
+        };
+        addNotification(order);
+        showNotification(1);
+        playNotificationSound();
+    });
+});
+</script>
+{% endblock %}
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+
+    // Initial check for screen size on load
+    if (window.innerWidth <= 992) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('shifted');
+    }
+
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('show'); // For mobile overlay
+        // For larger screens, collapse/expand
+        if (window.innerWidth > 992) {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('shifted');
+        }
+    });
+
+    // Close sidebar when clicking outside on small screens
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 992 && sidebar.classList.contains('show') && 
+            !sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+            sidebar.classList.remove('show');
+        }
+    });
+
+    // Adjust sidebar on window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 992) {
+            sidebar.classList.remove('collapsed', 'show');
+            mainContent.classList.remove('shifted');
+        } else {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('shifted');
+            sidebar.classList.remove('show'); // Ensure it's hidden on resize if it was open
+        }
+    });
+});
+</script>
+
+<!-- Real-time Notifications (Firestore Listeners - No Polling!) -->
+<script>
+    let knownOrderIds = new Set();
+    let notifications = [];
+
+    function addNotification(order) {
+        notifications.unshift(order);
+        if (notifications.length > 10) notifications.pop();
+        updateNotificationDropdown();
+    }
+
+    function updateNotificationDropdown() {
+        const list = document.getElementById('notificationList');
+        const badge = document.getElementById('notificationBadge');
+        
+        if (notifications.length === 0) {
+            list.innerHTML = `
+                <li class="text-center text-muted py-3">
+                    <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                    No new notifications
+                </li>
+            `;
+            badge.style.display = 'none';
+        } else {
+            list.innerHTML = notifications.map(notif => `
+                <li>
+                    <a class="dropdown-item" href="/orders/${notif.id}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>New Order #${notif.orderId.slice(-8)}</strong>
+                                <div class="text-muted small">$${notif.totalAmount.toFixed(2)}</div>
+                            </div>
+                            <small class="text-muted">${formatTime(notif.timestamp)}</small>
+                        </div>
+                    </a>
+                </li>
+            `).join('');
+            badge.textContent = notifications.length;
+            badge.style.display = 'inline-block';
+        }
+    }
+
+    function formatTime(date) {
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000);
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return date.toLocaleDateString();
+    }
+
+    function showNotification(count) {
+        const toast = new bootstrap.Toast(document.getElementById('orderNotification'));
+        document.getElementById('notificationBody').textContent = 
+            count === 1 ? 'A new order has been placed!' : `${count} new orders have been placed!`;
+        toast.show();
+    }
+
+    function playNotificationSound() {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHAU2jdXvzn0pBSh+zPDajzsKElyx6OyrWBUIQ5zd8sFuJAUuhM/z24k2CBhku+zooVARC0yl4fG5ZRwFNo3V7859KQUofsz');
+        audio.play().catch(() => {});
+    }
+
+</script>
+
+<!-- Firebase Cloud Messaging (Real-time notifications) -->
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCoTZoQRtiTATNY5JCWqTMCKDxoTcIok3E",
+        projectId: "frizzly-9a65f",
+        messagingSenderId: "941997129015",
+        appId: "1:941997129015:web:c9c18a0c76b592f8006eb2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let isFirstLoad = true;
+
+    // Listen for new orders in real-time (NO CLOUD FUNCTIONS NEEDED!)
+    onSnapshot(collection(db, 'orders'), (snapshot) => {
+        if (isFirstLoad) {
+            // First load - just record existing orders
+            snapshot.docs.forEach(doc => knownOrderIds.add(doc.id));
+            isFirstLoad = false;
+            console.log('Real-time listener started: ' + snapshot.size + ' orders');
+        } else {
+            // Check for changes (new orders AND status updates)
+            snapshot.docChanges().forEach((change) => {
+                const doc = change.doc;
+                const data = doc.data();
+                
+                if (change.type === 'added' && !knownOrderIds.has(doc.id)) {
+                    // New order
+                    knownOrderIds.add(doc.id);
+                    const order = {
+                        id: doc.id,
+                        orderId: data.orderId || doc.id,
+                        totalAmount: data.totalAmount || 0,
+                        timestamp: new Date()
+                    };
+                    console.log('🔔 New order detected:', order.orderId);
+                    addNotification(order);
+                    showNotification(1);
+                    playNotificationSound();
+                }
+                
+                if (change.type === 'modified') {
+                    // Order status updated
+                    console.log('📝 Order updated:', data.orderId, '→', data.status);
+                    const toast = new bootstrap.Toast(document.getElementById('orderNotification'));
+                    document.getElementById('notificationBody').textContent = 
+                        `Order #${(data.orderId || doc.id).slice(-8)} updated to ${data.status}`;
+                    toast.show();
+                    
+                    // Reload page if on orders page to show updated status
+                    if (window.location.pathname.includes('/orders')) {
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                }
+            });
+        }
+    }, (error) => {
+        console.error('Firestore listener error:', error);
+    });
+</script>
+</body>
+</html>

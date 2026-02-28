@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{% block title %}FRIZZLY Admin{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f8f9fa; }
+        .sidebar { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            height: 100vh; 
+            width: 240px; /* YouTube expanded width */
+            background: #202020; /* Darker background */
+            padding: 15px 0; /* Slightly less padding */
+            z-index: 1000; 
+            transition: all 0.3s;
+            overflow-x: hidden;
+            overflow-y: auto; /* Enable vertical scrolling */
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3); /* Stronger shadow */
+        }
+        .sidebar.collapsed {
+            width: 72px; /* YouTube collapsed width */
+        }
+        .sidebar .logo { 
+            color: white; 
+            font-size: 22px; /* Slightly smaller logo */
+            font-weight: 700; 
+            padding: 0 15px; /* Adjusted padding */
+            margin-bottom: 20px; /* Less margin */
+            white-space: nowrap;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar.collapsed .logo {
+            font-size: 20px;
+            padding: 0 10px;
+            text-align: center;
+            justify-content: center; /* Center logo icon */
+        }
+        .sidebar.collapsed .logo .logo-text {
+            display: none;
+        }
+        .sidebar .nav-link { 
+            color: rgba(255,255,255,0.8); /* Lighter text */
+            padding: 10px 20px; 
+            margin: 2px 0; 
+            transition: all 0.3s; 
+            border-left: 4px solid transparent; 
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem; /* Slightly smaller font */
+        }
+        .sidebar.collapsed .nav-link {
+            padding: 10px 0; /* Centered padding for icons */
+            justify-content: center;
+        }
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { 
+            color: white; 
+            background: rgba(255,255,255,0.15); /* More prominent hover/active */
+            border-left-color: #ff0000; /* YouTube red for active */
+        }
+        .sidebar .nav-link i { 
+            margin-right: 15px; /* More margin for icons */
+            width: 24px; /* Slightly larger icon area */
+            text-align: center;
+            font-size: 1.2rem; /* Larger icons */
+        }
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+        }
+        .sidebar .menu-header {
+            color: rgba(255,255,255,0.5); /* Lighter header text */
+            font-size: 0.7rem; /* Smaller header font */
+            font-weight: 600;
+            padding: 15px 20px 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px; /* More letter spacing */
+            margin-top: 15px;
+        }
+        .sidebar.collapsed .menu-header {
+            display: none;
+        }
+        .main-content { 
+            margin-left: 240px; /* Match sidebar width */
+            padding: 20px; 
+            transition: all 0.3s;
+        }
+        .main-content.shifted {
+            margin-left: 72px; /* Match collapsed sidebar width */
+        }
+        .navbar { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-bottom: 30px; position: relative; z-index: 1040; }
+        .navbar .navbar-brand {
+            color: #202020; /* Dark text for brand */
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        .navbar .navbar-brand i {
+            font-size: 1.5rem; /* Larger icon */
+            margin-right: 8px;
+            color: #ff0000; /* YouTube red for icon */
+        }
+        .stat-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card .icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .stat-card.primary .icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .stat-card.success .icon { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .stat-card.warning .icon { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .stat-card.info .icon { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+        .table-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        /* New badge styles for granular statuses */
+        .badge-pending { background-color: #ffc107; color: #212529; } /* yellow */
+        .badge-confirmed { background-color: #17a2b8; color: #fff; } /* info blue */
+        .badge-preparing_order { background-color: #6c757d; color: #fff; } /* gray */
+        .badge-ready_for_pickup { background-color: #007bff; color: #fff; } /* primary blue */
+        .badge-on_way, .badge-out_for_delivery { background-color: #6f42c1; color: #fff; } /* purple */
+        .badge-delivered { background-color: #28a745; color: #fff; } /* green */
+        .badge-delivery_attempt_failed { background-color: #dc3545; color: #fff; } /* red */
+        .badge-cancelled { background-color: #dc3545; color: #fff; } /* red */
+        .badge-returned { background-color: #fd7e14; color: #fff; } /* orange */
+
+        .btn-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; }
+        .btn-gradient:hover { opacity: 0.9; color: white; }
+
+        /* Modern Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .loading-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .sidebar {
+                left: -250px; /* Hide sidebar by default on small screens */
+            }
+            .sidebar.show {
+                left: 0; /* Show sidebar when toggled */
+            }
+            .main-content {
+                margin-left: 0; /* No margin on small screens */
+            }
+            .navbar .navbar-brand {
+                margin-left: 15px; /* Adjust brand position */
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-card">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Processing...</div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="bi bi-basket"></i> <span class="logo-text">FRIZZLY</span>
+        </div>
+        <nav class="nav flex-column">
+            <ul class="list-unstyled">
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-header">Management</li>
+                <li>
+                    <a class="nav-link {% if request.endpoint in ['orders', 'order_detail'] %}active{% endif %}" href="{{ url_for('orders.orders') }}">
+                        <i class="bi bi-cart-check"></i> <span>Orders</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'delivery_logistics' %}active{% endif %}" href="{{ url_for('delivery_logistics') }}">
+                        <i class="bi bi-truck"></i> <span>Delivery</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.endpoint in ['products.products', 'products.add_product', 'products.edit_product'] %}active{% endif %}" href="{{ url_for('products.products') }}">
+                        <i class="bi bi-box-seam"></i> <span>Products</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'stock_management' %}active{% endif %}" href="{{ url_for('stock_management') }}">
+                        <i class="bi bi-boxes"></i> <span>Stock</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.endpoint in ['drivers', 'add_driver', 'edit_driver', 'driver_detail'] %}active{% endif %}" href="{{ url_for('drivers') }}">
+                        <i class="bi bi-person-badge"></i> <span>Drivers</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'users' %}active{% endif %}" href="{{ url_for('users') }}">
+                        <i class="bi bi-people"></i> <span>Users</span>
+                    </a>
+                </li>
+                <li class="menu-header">Analytics & Reports</li>
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'revenue' %}active{% endif %}" href="{{ url_for('revenue') }}">
+                        <i class="bi bi-cash-stack"></i> <span>Revenue</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('analytics') }}">
+                        <i class="bi bi-graph-up"></i> <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="menu-header">System</li>
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">
+                        <i class="bi bi-bell"></i> <span>Notifications</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'activity_logs' %}active{% endif %}" href="{{ url_for('activity_logs') }}">
+                        <i class="bi bi-clock-history"></i> <span>Activity Logs</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('settings') }}">
+                        <i class="bi bi-gear"></i> <span>Settings</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                        <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <!-- Desktop Toggle Button -->
+                <button class="btn btn-link me-3 d-none d-lg-block" type="button" id="desktopSidebarToggle">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <!-- Mobile Toggle Button -->
+                <button class="btn btn-link d-lg-none me-3" type="button" id="mobileSidebarToggle">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                
+                <a class="navbar-brand mb-0 h1" href="{{ url_for('dashboard.dashboard') }}">
+                    <i class="bi bi-basket"></i> FRIZZLY
+                </a>
+                
+                <!-- Order Stats in Navbar -->
+                <div class="d-none d-lg-flex align-items-center gap-3 ms-auto me-3">
+                    <div class="position-relative">
+                        <i class="bi bi-cart-check fs-4" style="color: #667eea;"></i>
+                        <span id="totalOrdersBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style="font-size: 10px;">{{ stats.total_orders if stats else 0 }}</span>
+                    </div>
+                    <div class="position-relative">
+                        <i class="bi bi-clock-history fs-4" style="color: #4facfe;"></i>
+                        <span id="pendingOrdersBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info" style="font-size: 10px;">{{ stats.pending_orders if stats else 0 }}</span>
+                    </div>
+                    <div class="position-relative">
+                        <i class="bi bi-truck fs-4" style="color: #f5576c;"></i>
+                        <span id="inProgressOrdersBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning" style="font-size: 10px;">{{ stats.in_progress_orders if stats else 0 }}</span>
+                    </div>
+                    <div class="position-relative">
+                        <i class="bi bi-check-circle fs-4" style="color: #43e97b;"></i>
+                        <span id="deliveredOrdersBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style="font-size: 10px;">{{ stats.delivered_orders if stats else 0 }}</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <!-- Notification Bell Dropdown -->
+                    <div class="dropdown me-3">
+                        <button class="btn btn-link position-relative p-0" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none; color: inherit;">
+                            <i class="bi bi-bell-fill fs-5"></i>
+                            <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 10px; z-index: 1050;">0</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 400px; overflow-y: auto;">
+                            <li class="dropdown-header d-flex justify-content-between align-items-center">
+                                <span><strong>Notifications</strong></span>
+                                <button class="btn btn-sm btn-link text-decoration-none" onclick="clearNotifications()" style="font-size: 12px;">Clear All</button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <div id="notificationList">
+                                <li class="text-center text-muted py-3">
+                                    <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                                    No new notifications
+                                </li>
+                            </div>
+                        </ul>
+                    </div>
+                    
+                    <!-- Admin User Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-link text-decoration-none p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color: inherit;">
+                            <i class="bi bi-person-circle fs-5"></i>
+                            <span class="ms-2">{{ current_user.name }}</span>
+                            <i class="bi bi-chevron-down ms-1" style="font-size: 12px;"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li class="dropdown-header">
+                                <strong>{{ current_user.name }}</strong><br>
+                                <small class="text-muted">{{ current_user.email }}</small>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('settings') }}">
+                                    <i class="bi bi-gear me-2"></i> Settings
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Notification Toast -->
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+            <div id="orderNotification" class="toast hide" role="alert">
+                <div class="toast-header bg-success text-white">
+                    <i class="bi bi-bell-fill me-2"></i>
+                    <strong class="me-auto">New Order!</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body" id="notificationBody">
+                    A new order has been placed!
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Real-time notifications handled below -->
+    {% block extra_js %}
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const desktopSidebarToggle = document.getElementById('desktopSidebarToggle');
+    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+
+    // Desktop toggle button
+    if (desktopSidebarToggle) {
+        desktopSidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('shifted');
+            // The icon for desktopSidebarToggle remains 'bi-list' (hamburger)
+        });
+    }
+
+    // Mobile toggle
+    if (mobileSidebarToggle) {
+        mobileSidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+    }
+
+    // Close sidebar when clicking outside on small screens
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 992 && sidebar.classList.contains('show') && 
+            !sidebar.contains(event.target) && !mobileSidebarToggle.contains(event.target)) {
+            sidebar.classList.remove('show');
+        }
+    });
+
+    // Adjust sidebar on window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 992) {
+            sidebar.classList.remove('show'); // Only remove 'show' if it was a mobile overlay
+            // Ensure desktop toggle icon is 'bi-list' if it somehow changed
+            if (desktopSidebarToggle) {
+                desktopSidebarToggle.querySelector('i').className = 'bi bi-list';
+            }
+        } else {
+            sidebar.classList.remove('show'); // Ensure it's hidden on resize if it was open
+        }
+    });
+});
+</script>
+<!-- Real-time Notifications via API (SSE) - v2.0 -->
+<script>
+    let knownOrderIds = new Set(JSON.parse(localStorage.getItem('knownOrderIds') || '[]'));
+    let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    let eventSource = null;
+
+    // Restore notifications on page load
+    if (notifications.length > 0) {
+        updateNotificationDropdown();
+    }
+
+    function addNotification(order) {
+        notifications.unshift(order);
+        if (notifications.length > 10) notifications.pop();
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        updateNotificationDropdown();
+    }
+
+    function updateNotificationDropdown() {
+        const list = document.getElementById('notificationList');
+        const badge = document.getElementById('notificationBadge');
+        
+        console.log('🔵 Updating badge:', notifications.length, 'notifications');
+        console.log('🔵 Badge element:', badge);
+        console.log('🔵 Current page:', window.location.pathname);
+        
+        if (!badge) {
+            console.error('❌ Badge element not found!');
+            return;
+        }
+        
+        if (notifications.length === 0) {
+            list.innerHTML = `
+                <li class="text-center text-muted py-3">
+                    <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                    No new notifications
+                </li>
+            `;
+            badge.style.display = 'none';
+            console.log('🔵 Badge hidden (no notifications)');
+        } else {
+            list.innerHTML = notifications.map((notif, index) => `
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center" href="/orders/${notif.id}" onclick="removeNotification(${index}); return true;">
+                        <div class="flex-grow-1">
+                            <div><strong>New Order #${notif.orderId.slice(-8)}</strong></div>
+                            <div class="text-muted small">$${notif.totalAmount.toFixed(2)} • ${formatTime(notif.timestamp)}</div>
+                        </div>
+                    </a>
+                </li>
+            `).join('');
+            badge.textContent = notifications.length;
+            badge.style.display = 'inline-block';
+            badge.style.visibility = 'visible';
+            console.log('🔵 Badge shown:', notifications.length, 'Display:', badge.style.display, 'Visibility:', badge.style.visibility);
+        }
+    }
+
+    function formatTime(date) {
+        // Convert to Date object if it's a string
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        const now = new Date();
+        const diff = Math.floor((now - dateObj) / 1000);
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return dateObj.toLocaleDateString();
+    }
+
+    function clearNotifications() {
+        notifications = [];
+        localStorage.removeItem('notifications');
+        updateNotificationDropdown();
+    }
+    window.clearNotifications = clearNotifications;
+
+    function removeNotification(index) {
+        notifications.splice(index, 1);
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        updateNotificationDropdown();
+    }
+    window.removeNotification = removeNotification;
+
+    function showNotification(count) {
+        const toast = new bootstrap.Toast(document.getElementById('orderNotification'));
+        document.getElementById('notificationBody').textContent = 
+            count === 1 ? 'A new order has been placed!' : `${count} new orders have been placed!`;
+        toast.show();
+    }
+
+    function playNotificationSound() {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHAU2jdXvzn0pBSh+zPDajzsKElyx6OyrWBUIQ5zd8sFuJAUuhM/z24k2CBhku+zooVARC0yl4fG5ZRwFNo3V7859KQUofsz');
+        audio.play().catch(() => {});
+    }
+
+    // Connect to SSE endpoint for real-time updates
+    function connectSSE() {
+        eventSource = new EventSource('/api/stream-orders');
+        
+        eventSource.onopen = function() {
+            console.log('✅ Real-time connection established (SSE)');
+        };
+        
+        eventSource.addEventListener('new_order', function(e) {
+            const data = JSON.parse(e.data);
+            if (!knownOrderIds.has(data.id)) {
+                knownOrderIds.add(data.id);
+                localStorage.setItem('knownOrderIds', JSON.stringify([...knownOrderIds]));
+                const order = {
+                    id: data.id,
+                    orderId: data.orderId,
+                    totalAmount: data.totalAmount,
+                    timestamp: new Date()
+                };
+                console.log('🔔 New order detected:', order.orderId);
+                addNotification(order);
+                showNotification(1);
+                playNotificationSound();
+                updateOrderStats(); // Update navbar badges
+            }
+        });
+        
+        eventSource.addEventListener('order_update', function(e) {
+            const data = JSON.parse(e.data);
+            console.log('📝 Order updated:', data.orderId, '→', data.status);
+            const toast = new bootstrap.Toast(document.getElementById('orderNotification'));
+            document.getElementById('notificationBody').textContent = 
+                `Order #${data.orderId.slice(-8)} updated to ${data.status}`;
+            toast.show();
+            updateOrderStats(); // Update navbar badges
+            
+            if (window.location.pathname.includes('/orders')) {
+                setTimeout(() => location.reload(), 1000);
+            }
+        });
+        
+        eventSource.onerror = function() {
+            console.log('❌ SSE connection lost, reconnecting...');
+            eventSource.close();
+            setTimeout(connectSSE, 5000);
+        };
+    }
+
+    // Start SSE connection and update badge on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔵 Page loaded, notifications:', notifications.length);
+        updateNotificationDropdown();
+        connectSSE();
+    });
+
+    // Loading overlay functions
+    window.showLoading = function(text = 'Processing...') {
+        const overlay = document.getElementById('loadingOverlay');
+        const loadingText = overlay.querySelector('.loading-text');
+        if (loadingText) loadingText.textContent = text;
+        overlay.classList.add('active');
+    };
+
+    window.hideLoading = function() {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.classList.remove('active');
+    };
+
+    // Update order stats badges
+    window.updateOrderStats = function() {
+        fetch('/api/dashboard-stats')
+            .then(r => r.json())
+            .then(data => {
+                const totalBadge = document.getElementById('totalOrdersBadge');
+                const pendingBadge = document.getElementById('pendingOrdersBadge');
+                const inProgressBadge = document.getElementById('inProgressOrdersBadge');
+                const deliveredBadge = document.getElementById('deliveredOrdersBadge');
+                
+                if (totalBadge) totalBadge.textContent = data.total_orders || 0;
+                if (pendingBadge) pendingBadge.textContent = data.pending_orders || 0;
+                if (inProgressBadge) inProgressBadge.textContent = data.in_progress_orders || 0;
+                if (deliveredBadge) deliveredBadge.textContent = data.delivered_orders || 0;
+            })
+            .catch(e => console.error('Failed to update stats:', e));
+    };
+
+    // Auto-show loading on form submit
+    document.addEventListener('submit', function(e) {
+        if (e.target.tagName === 'FORM') {
+            showLoading('Submitting...');
+        }
+    });
+
+    // Auto-show loading on navigation
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && link.href && !link.target && !link.href.startsWith('#') && !link.href.startsWith('javascript:')) {
+            showLoading('Loading...');
+        }
+    });
+</script>
+
+<!-- Firebase Cloud Messaging -->
+<script type="module" src="{{ url_for('static', filename='fcm-init.js') }}"></script>
+
+{% endblock %}
+</body>
+</html>

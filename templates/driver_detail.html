@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Driver Details - FRIZZLY Admin{% endblock %}
+{% block page_title %}Driver Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="table-card">
+            <h5 class="mb-4"><i class="bi bi-person-circle me-2"></i>Driver Information</h5>
+            <div class="mb-3">
+                <label class="text-muted small">Name</label>
+                <p class="mb-0"><strong>{{ driver.name }}</strong></p>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small">Phone</label>
+                <p class="mb-0">{{ driver.phone }}</p>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small">Email</label>
+                <p class="mb-0">{{ driver.email or 'N/A' }}</p>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small">Vehicle</label>
+                <p class="mb-0">{{ driver.vehicleType|upper }} - {{ driver.vehicleNumber }}</p>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small">Status</label>
+                <p class="mb-0">
+                    {% if driver.status == 'available' %}
+                    <span class="badge bg-success">Available</span>
+                    {% elif driver.status == 'on_delivery' %}
+                    <span class="badge bg-warning">On Delivery</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Offline</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small">Total Deliveries</label>
+                <p class="mb-0"><strong>{{ driver.totalDeliveries or 0 }}</strong></p>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small">Rating</label>
+                <p class="mb-0">
+                    <i class="bi bi-star-fill text-warning"></i> {{ driver.rating or 5.0 }}
+                </p>
+            </div>
+            {% if current_user.role == 'admin' %}
+            <div class="d-flex gap-2 mt-4">
+                <a href="{{ url_for('edit_driver', driver_id=driver.id) }}" class="btn btn-outline-primary btn-sm flex-fill">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <form method="POST" action="{{ url_for('delete_driver', driver_id=driver.id) }}" class="flex-fill" onsubmit="return confirm('Delete this driver?');">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="table-card">
+            <h5 class="mb-4"><i class="bi bi-clock-history me-2"></i>Delivery History</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for delivery in deliveries %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('orders.order_detail', order_id=delivery.id) }}">{{ delivery.id }}</a>
+                            </td>
+                            <td>{{ delivery.createdAt }}</td>
+                            <td>${{ "%.2f"|format(delivery.totalAmount) }}</td>
+                            <td><span class="badge badge-{{ delivery.status|lower }}">{{ delivery.status }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No deliveries yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

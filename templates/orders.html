@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Orders - FRIZZLY Admin{% endblock %}
+{% block page_title %}Orders Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1"><i class="bi bi-cart-check me-2 text-primary"></i>Orders Management</h4>
+                    <p class="text-muted small mb-0">Manage and track all customer orders</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-success btn-sm" onclick="window.location.href='{{ url_for('orders.export_orders') }}'">
+                        <i class="bi bi-download me-1"></i>Export CSV
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="location.reload()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total Orders</p>
+                            <h4 class="mb-0">{{ orders|length }}</h4>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-cart-check fs-4 text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Pending</p>
+                            <h4 class="mb-0 text-warning">{{ orders|selectattr('status', 'equalto', 'PENDING')|list|length }}</h4>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-clock-history fs-4 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">In Progress</p>
+                            <h4 class="mb-0 text-info">{{ orders|selectattr('status', 'in', ['CONFIRMED', 'PREPARING_ORDER', 'ON_WAY'])|list|length }}</h4>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-truck fs-4 text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Delivered</p>
+                            <h4 class="mb-0 text-success">{{ orders|selectattr('status', 'equalto', 'DELIVERED')|list|length }}</h4>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-check-circle fs-4 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Search Orders</label>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by Order ID, Customer, Amount...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Filter by Status</label>
+                    <select id="statusFilter" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for status_option in valid_statuses %}
+                        <option value="{{ status_option }}">{{ status_option.replace('_', ' ').title() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="document.getElementById('searchInput').value=''; document.getElementById('statusFilter').value=''; location.reload();">
+                        <i class="bi bi-x-circle me-1"></i>Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('orders.bulk_update_status') }}" id="bulkForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Bulk Update Status</label>
+                        <select name="status" class="form-select" required>
+                            <option value="">Select Status</option>
+                            {% for status_option in valid_statuses %}
+                            <option value="{{ status_option }}">{{ status_option.replace('_', ' ').title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="bi bi-arrow-repeat me-1"></i>Update Selected
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small" id="selectedCount">0 orders selected</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="ordersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="px-4 py-3">
+                                <input type="checkbox" id="selectAll" title="Select All">
+                            </th>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td class="px-4">
+                                <input type="checkbox" name="order_ids" value="{{ order.id }}" class="order-checkbox" form="bulkForm">
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">#{{ order.orderId[-8:] if order.orderId else order.id[:8] }}</span>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 200px;" title="{{ order.userId }}">
+                                    {{ order.userId[:30] }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ order['items']|length }} items</span>
+                            </td>
+                            <td>
+                                <strong class="text-success">${{ "%.2f"|format(order.totalAmount) }}</strong>
+                            </td>
+                            <td>
+                                {% if order.status == 'PENDING' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif order.status == 'CONFIRMED' %}
+                                <span class="badge bg-info">Confirmed</span>
+                                {% elif order.status == 'PREPARING_ORDER' %}
+                                <span class="badge bg-primary">Preparing</span>
+                                {% elif order.status == 'ON_WAY' %}
+                                <span class="badge bg-primary">On Way</span>
+                                {% elif order.status == 'DELIVERED' %}
+                                <span class="badge bg-success">Delivered</span>
+                                {% elif order.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ order.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ order.createdAt[:16] if order.createdAt else 'N/A' }}</small>
+                            </td>
+                            <td class="text-center">
+                                <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                                <p class="text-muted">No orders found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+// Auto-fill search from URL parameter
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+        const searchInput = document.getElementById('searchInput');
+        searchInput.value = searchParam;
+        // Trigger search
+        const event = new Event('keyup');
+        searchInput.dispatchEvent(event);
+    }
+});
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#ordersTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchValue) ? '' : 'none';
+    });
+});
+
+// Status filter
+document.getElementById('statusFilter').addEventListener('change', function() {
+    const filterValue = this.value;
+    const rows = document.querySelectorAll('#ordersTable tbody tr');
+    
+    rows.forEach(row => {
+        if (!filterValue || row.textContent.includes(filterValue.replace('_', ' '))) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Bulk selection
+const selectAll = document.getElementById('selectAll');
+const selectedCount = document.getElementById('selectedCount');
+
+selectAll.addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    updateSelectedCount();
+});
+
+document.querySelectorAll('.order-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateSelectedCount);
+});
+
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('.order-checkbox:checked').length;
+    selectedCount.textContent = `${checked} order${checked !== 1 ? 's' : ''} selected`;
+}
+</script>
+{% endblock %}
