@@ -75,13 +75,16 @@ def dashboard():
             SUM(CASE WHEN status = 'DELIVERED' THEN total_amount ELSE 0 END) as total_revenue
         FROM orders
     """)
-    stats = cur.fetchone()
+    stats = dict(cur.fetchone())
     
     cur.execute("SELECT COUNT(*) as total_products FROM products")
     stats['total_products'] = cur.fetchone()['total_products']
     
     cur.execute("SELECT COUNT(*) as total_users FROM users")
     stats['total_users'] = cur.fetchone()['total_users']
+    
+    cur.execute("SELECT COUNT(*) as low_stock_products FROM products WHERE stock < 10")
+    stats['low_stock_products'] = cur.fetchone()['low_stock_products']
     
     cur.execute("SELECT * FROM orders ORDER BY timestamp DESC LIMIT 10")
     recent_orders = cur.fetchall()
