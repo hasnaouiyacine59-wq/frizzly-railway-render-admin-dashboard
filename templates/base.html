@@ -454,7 +454,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
     let knownOrderIds = new Set(JSON.parse(localStorage.getItem('knownOrderIds') || '[]'));
     let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-    let eventSource = null;
 
     // Restore notifications on page load
     if (notifications.length > 0) {
@@ -546,14 +545,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Connect to SSE endpoint for real-time updates
-    function connectSSE() {
-        eventSource = new EventSource('/api/stream-orders');
         
-        eventSource.onopen = function() {
             console.log('✅ Real-time connection established (SSE)');
         };
         
-        eventSource.addEventListener('new_order', function(e) {
             const data = JSON.parse(e.data);
             if (!knownOrderIds.has(data.id)) {
                 knownOrderIds.add(data.id);
@@ -572,7 +567,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        eventSource.addEventListener('order_update', function(e) {
             const data = JSON.parse(e.data);
             console.log('📝 Order updated:', data.orderId, '→', data.status);
             const toast = new bootstrap.Toast(document.getElementById('orderNotification'));
@@ -586,10 +580,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        eventSource.onerror = function() {
             console.log('❌ SSE connection lost, reconnecting...');
-            eventSource.close();
-            setTimeout(connectSSE, 5000);
         };
     }
 
@@ -597,7 +588,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🔵 Page loaded, notifications:', notifications.length);
         updateNotificationDropdown();
-        connectSSE();
     });
 
     // Loading overlay functions

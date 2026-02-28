@@ -98,14 +98,10 @@ Dashboard
 let connectionAttempts = 0;
 const maxRetries = 5;
 
-function connectSSE() {
-    if (eventSource) {
-        eventSource.close();
     }
     
     connectionAttempts++;
     console.log(`🔄 Connecting to SSE (attempt ${connectionAttempts})...`);
-    console.log('🔗 SSE URL:', window.location.origin + '/api/stream-orders');
     
     // Set timeout to detect stuck connection
     const connectionTimeout = setTimeout(() => {
@@ -115,13 +111,10 @@ function connectSSE() {
             indicator.className = 'badge bg-warning';
             indicator.textContent = 'Timeout';
             // Force error to trigger retry
-            if (eventSource) eventSource.close();
         }
     }, 10000);
     
-    eventSource = new EventSource('/api/stream-orders');
     
-    eventSource.onopen = function() {
         clearTimeout(connectionTimeout);
         console.log('✅ SSE Connected');
         connectionAttempts = 0; // Reset on successful connection
@@ -134,7 +127,6 @@ function connectSSE() {
         }
     };
     
-    eventSource.addEventListener('new_order', function(e) {
         const order = JSON.parse(e.data);
         console.log('🔔 New order received:', order);
         
@@ -160,7 +152,6 @@ function connectSSE() {
         }, 3000);
     });
     
-    eventSource.addEventListener('order_update', function(e) {
         const order = JSON.parse(e.data);
         console.log('📝 Order updated:', order);
         
@@ -177,9 +168,7 @@ function connectSSE() {
         updateDashboardStats();
     });
     
-    eventSource.onerror = function(e) {
         console.error('❌ SSE Error:', e);
-        console.log('ReadyState:', eventSource.readyState);
         
         // Update connection status indicator
         const indicator = document.getElementById('connectionStatus');
@@ -188,13 +177,11 @@ function connectSSE() {
             indicator.textContent = 'Disconnected';
         }
         
-        eventSource.close();
         
         // Retry with exponential backoff
         if (connectionAttempts < maxRetries) {
             const delay = Math.min(1000 * Math.pow(2, connectionAttempts), 30000);
             console.log(`⏳ Reconnecting in ${delay/1000}s...`);
-            setTimeout(connectSSE, delay);
         } else {
             console.error('❌ Max retries reached. Please refresh the page.');
             if (indicator) {
@@ -325,12 +312,9 @@ window.clearNotifications = function() {
 };
 
 // Connect on page load
-connectSSE();
 
 // Reconnect on visibility change
 document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && (!eventSource || eventSource.readyState === EventSource.CLOSED)) {
-        connectSSE();
     }
 });
 </script>

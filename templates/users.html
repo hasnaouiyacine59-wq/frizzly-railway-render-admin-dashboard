@@ -95,7 +95,7 @@
                             <span class="text-muted">-</span>
                         {% endif %}
                     </td>
-                    <td>{{ user.createdAt[:10] if user.createdAt and user.createdAt is string else 'N/A' }}</td>
+                    <td>{{ user.created_at|format_date if user.createdAt and user.createdAt is string else 'N/A' }}</td>
                     <td>
                         <a href="{{ url_for('user_detail', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye"></i>

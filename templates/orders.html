@@ -199,7 +199,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <small class="text-muted">{{ order.created_at[:16] if order.created_at else 'N/A' }}</small>
+                                <small class="text-muted">{{ order.created_at|format_date if order.created_at else 'N/A' }}</small>
                             </td>
                             <td class="text-center">
                                 <a href="{{ url_for('order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
