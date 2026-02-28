@@ -78,7 +78,7 @@
                         {% for delivery in deliveries %}
                         <tr>
                             <td>
-                                <a href="{{ url_for('orders.order_detail', order_id=delivery.id) }}">{{ delivery.id }}</a>
+                                <a href="{{ url_for('order_detail', order_id=delivery.id) }}">{{ delivery.id }}</a>
                             </td>
                             <td>{{ delivery.createdAt }}</td>
                             <td>${{ "%.2f"|format(delivery.totalAmount) }}</td>

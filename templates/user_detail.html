@@ -87,7 +87,7 @@
                             <td><span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span></td>
                             <td>{{ order.created_at|format_date if order.created_at and order.created_at is string else 'N/A' }}</td>
                             <td>
-                                <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ url_for('order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
                             </td>
