@@ -224,13 +224,13 @@
         <nav class="nav flex-column">
             <ul class="list-unstyled">
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
+                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                         <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
                     </a>
                 </li>
                 <li class="menu-header">Management</li>
                 <li>
-                    <a class="nav-link {% if request.endpoint in ['orders', 'order_detail'] %}active{% endif %}" href="{{ url_for('orders.orders') }}">
+                    <a class="nav-link {% if request.endpoint in ['orders', 'order_detail'] %}active{% endif %}" href="{{ url_for('orders') }}">
                         <i class="bi bi-cart-check"></i> <span>Orders</span>
                     </a>
                 </li>
@@ -240,7 +240,7 @@
                     </a>
                 </li>
                 <li>
-                    <a class="nav-link {% if request.endpoint in ['products.products', 'products.add_product', 'products.edit_product'] %}active{% endif %}" href="{{ url_for('products.products') }}">
+                    <a class="nav-link {% if request.endpoint in ['products.products', 'products.add_product', 'products.edit_product'] %}active{% endif %}" href="{{ url_for('products') }}">
                         <i class="bi bi-box-seam"></i> <span>Products</span>
                     </a>
                 </li>
@@ -287,7 +287,7 @@
                     </a>
                 </li>
                 <li>
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
                         <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
                     </a>
                 </li>
@@ -309,7 +309,7 @@
                     <i class="bi bi-list fs-4"></i>
                 </button>
                 
-                <a class="navbar-brand mb-0 h1" href="{{ url_for('dashboard.dashboard') }}">
+                <a class="navbar-brand mb-0 h1" href="{{ url_for('dashboard') }}">
                     <i class="bi bi-basket"></i> FRIZZLY
                 </a>
                 
@@ -375,7 +375,7 @@
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                                 </a>
                             </li>
