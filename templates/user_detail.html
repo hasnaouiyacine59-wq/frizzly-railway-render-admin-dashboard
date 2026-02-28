@@ -85,7 +85,7 @@
                             <td>{{ order['items']|length }} items</td>
                             <td><strong>${{ "%.2f"|format(order.total_amount) }}</strong></td>
                             <td><span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span></td>
-                            <td>{{ order.created_at[:10] if order.created_at and order.created_at is string else 'N/A' }}</td>
+                            <td>{{ order.created_at|format_date if order.created_at and order.created_at is string else 'N/A' }}</td>
                             <td>
                                 <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>

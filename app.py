@@ -234,5 +234,11 @@ def timestamp_to_date(timestamp):
         return datetime.fromtimestamp(timestamp / 1000).strftime('%Y-%m-%d %H:%M')
     return 'N/A'
 
+@app.template_filter('format_date')
+def format_date(dt):
+    if dt:
+        return dt.strftime('%Y-%m-%d %H:%M')
+    return 'N/A'
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
