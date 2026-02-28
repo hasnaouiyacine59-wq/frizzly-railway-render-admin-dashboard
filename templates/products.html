@@ -16,8 +16,8 @@
         {% for product in products %}
         <div class="col-md-4">
             <div class="card h-100">
-                {% if product.imageUrl %}
-                <img src="{{ product.imageUrl }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
                 {% else %}
                 <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                     <i class="bi bi-image" style="font-size: 48px; color: #ccc;"></i>
@@ -26,7 +26,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h5 class="card-title mb-0">{{ product.name }}</h5>
-                        {% if product.inStock %}
+                        {% if product.is_active %}
                         <span class="badge bg-success">In Stock</span>
                         {% else %}
                         <span class="badge bg-danger">Out of Stock</span>

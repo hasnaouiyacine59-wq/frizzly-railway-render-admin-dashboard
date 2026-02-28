@@ -53,7 +53,7 @@
             eventSource.addEventListener('new_order', function(e) {
                 log('NEW ORDER: ' + e.data, 'success');
                 const order = JSON.parse(e.data);
-                alert('New Order: ' + order.orderId);
+                alert('New Order: ' + order.order_id);
             });
             
             eventSource.addEventListener('order_update', function(e) {

@@ -26,8 +26,8 @@
                         knownOrderIds.add(order.id);
                         newOrders.push({
                             id: order.id,
-                            orderId: order.orderId || order.id,
-                            totalAmount: order.totalAmount || 0,
+                            orderId: order.order_id || order.id,
+                            totalAmount: order.total_amount || 0,
                             timestamp: new Date()
                         });
                     }

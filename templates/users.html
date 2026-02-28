@@ -156,7 +156,7 @@
                             <option value="{{ user.id }}">
                                 {{ user.displayName or user.name or 'User' }} 
                                 ({{ user.email or user.userId[:20] if user.userId else user.id[:20] }})
-                                {% if user.fcmToken %}✓{% else %}✗{% endif %}
+                                {% if user.fcm_token %}✓{% else %}✗{% endif %}
                             </option>
                             {% endfor %}
                         </select>

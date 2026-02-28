@@ -69,14 +69,14 @@ Dashboard
             <tbody>
                 {% for order in recent_orders %}
                 <tr>
-                    <td><strong>#{{ order.orderId[-8:] }}</strong></td>
-                    <td>{{ order.userId[:20] }}</td>
+                    <td><strong>#{{ order.order_id[-8:] }}</strong></td>
+                    <td>{{ order.user_id[:20] }}</td>
                     <td>{{ order['items']|length }} items</td>
-                    <td><strong>${{ "%.2f"|format(order.totalAmount) }}</strong></td>
+                    <td><strong>${{ "%.2f"|format(order.total_amount) }}</strong></td>
                     <td>
                         <span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span>
                     </td>
-                    <td>{{ order.createdAt[:10] if order.createdAt else 'N/A' }}</td>
+                    <td>{{ order.created_at[:10] if order.created_at else 'N/A' }}</td>
                     <td>
                         <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye"></i>
@@ -142,10 +142,10 @@ function connectSSE() {
         updateNotificationBadge(1);
         
         // Add to notification list
-        addNotificationToList('New Order!', `Order #${order.orderId.slice(-8)} - $${order.totalAmount.toFixed(2)}`, 'success');
+        addNotificationToList('New Order!', `Order #${order.order_id.slice(-8)} - $${order.total_amount.toFixed(2)}`, 'success');
         
         // Show notification
-        showNotification('New Order!', `Order #${order.orderId.slice(-8)} - $${order.totalAmount.toFixed(2)}`);
+        showNotification('New Order!', `Order #${order.order_id.slice(-8)} - $${order.total_amount.toFixed(2)}`);
         
         // Play sound
         playNotificationSound();
@@ -168,10 +168,10 @@ function connectSSE() {
         updateNotificationBadge(1);
         
         // Add to notification list
-        addNotificationToList('Order Updated', `Order #${order.orderId.slice(-8)} - ${order.status}`, 'info');
+        addNotificationToList('Order Updated', `Order #${order.order_id.slice(-8)} - ${order.status}`, 'info');
         
         // Show notification
-        showNotification('Order Updated', `Order #${order.orderId.slice(-8)} - ${order.status}`);
+        showNotification('Order Updated', `Order #${order.order_id.slice(-8)} - ${order.status}`);
         
         // Update stats
         updateDashboardStats();

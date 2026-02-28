@@ -564,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     totalAmount: data.totalAmount,
                     timestamp: new Date()
                 };
-                console.log('🔔 New order detected:', order.orderId);
+                console.log('🔔 New order detected:', order.order_id);
                 addNotification(order);
                 showNotification(1);
                 playNotificationSound();

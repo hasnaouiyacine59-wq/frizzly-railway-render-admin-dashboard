@@ -168,18 +168,18 @@
                                 <input type="checkbox" name="order_ids" value="{{ order.id }}" class="order-checkbox" form="bulkForm">
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark">#{{ order.orderId[-8:] if order.orderId else order.id[:8] }}</span>
+                                <span class="badge bg-light text-dark">#{{ order.order_id[-8:] if order.order_id else order.id[:8] }}</span>
                             </td>
                             <td>
-                                <div class="text-truncate" style="max-width: 200px;" title="{{ order.userId }}">
-                                    {{ order.userId[:30] }}
+                                <div class="text-truncate" style="max-width: 200px;" title="{{ order.user_id }}">
+                                    {{ order.user_id[:30] }}
                                 </div>
                             </td>
                             <td>
                                 <span class="badge bg-secondary">{{ order['items']|length }} items</span>
                             </td>
                             <td>
-                                <strong class="text-success">${{ "%.2f"|format(order.totalAmount) }}</strong>
+                                <strong class="text-success">${{ "%.2f"|format(order.total_amount) }}</strong>
                             </td>
                             <td>
                                 {% if order.status == 'PENDING' %}
@@ -199,7 +199,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <small class="text-muted">{{ order.createdAt[:16] if order.createdAt else 'N/A' }}</small>
+                                <small class="text-muted">{{ order.created_at[:16] if order.created_at else 'N/A' }}</small>
                             </td>
                             <td class="text-center">
                                 <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
