@@ -38,10 +38,10 @@
                 </div>
                 <div class="card-footer bg-white border-top-0">
                     <div class="d-flex gap-2">
-                        <a href="{{ url_for('products.edit_product', product_id=product.id) }}" class="btn btn-sm btn-outline-primary flex-fill">
+                        <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-sm btn-outline-primary flex-fill">
                             <i class="bi bi-pencil"></i> Edit
                         </a>
-                        <form method="POST" action="{{ url_for('products.delete_product', product_id=product.id) }}" class="flex-fill" onsubmit="return confirm('Delete this product?');">
+                        <form method="POST" action="{{ url_for('products', product_id=product.id) }}" class="flex-fill" onsubmit="return confirm('Delete this product?');">
                             <button type="submit" class="btn btn-sm btn-outline-danger w-100">
                                 <i class="bi bi-trash"></i> Delete
                             </button>
@@ -66,7 +66,7 @@
     {% if has_next %}
     <nav aria-label="Page navigation">
         <div class="text-center mt-4">
-            <a class="btn btn-primary" href="{{ url_for('products.products', cursor=next_cursor) }}">
+            <a class="btn btn-primary" href="{{ url_for('products', cursor=next_cursor) }}">
                 Load More Products &raquo;
             </a>
         </div>

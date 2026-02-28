@@ -76,7 +76,7 @@
                         <h5 class="modal-title">Assign Driver - Order #{{ order.order_id[:8] }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <form method="POST" action="{{ url_for('orders.assign_driver', order_id=order.id) }}">
+                    <form method="POST" action="{{ url_for('update_order', order_id=order.id) }}">
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label">Driver Name</label>
