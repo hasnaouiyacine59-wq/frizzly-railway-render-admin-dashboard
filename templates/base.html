@@ -269,6 +269,11 @@
                 </li>
                 <li class="menu-header">System</li>
                 <li>
+                    <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('settings') }}">
+                        <i class="bi bi-gear"></i> <span>Settings</span>
+                    </a>
+                </li>
+                <li>
                     <a class="nav-link" href="{{ url_for('logout') }}">
                         <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
                     </a>
@@ -657,4 +662,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 </script>
 
+<script src="{{ url_for('static', filename='professional.js') }}"></script>
 {% endblock %}

@@ -460,6 +460,11 @@ def analytics():
                          top_products=top_products,
                          activity=activity)
 
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html')
+
 @app.route('/drivers')
 @login_required
 def drivers():
