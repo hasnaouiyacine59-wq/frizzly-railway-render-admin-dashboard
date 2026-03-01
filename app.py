@@ -127,6 +127,19 @@ def orders():
     
     return render_template('orders.html', orders=orders)
 
+# Valid order statuses
+VALID_STATUSES = [
+    'PENDING',
+    'CONFIRMED',
+    'PREPARING',
+    'READY_FOR_PICKUP',
+    'OUT_FOR_DELIVERY',
+    'DELIVERED',
+    'CANCELLED',
+    'FAILED',
+    'REFUNDED'
+]
+
 @app.route('/orders/<order_id>')
 @login_required
 def order_detail(order_id):
@@ -141,7 +154,7 @@ def order_detail(order_id):
         flash('Order not found')
         return redirect(url_for('orders'))
     
-    return render_template('order_detail.html', order=order)
+    return render_template('order_detail.html', order=order, valid_statuses=VALID_STATUSES)
 
 @app.route('/orders/<order_id>/update', methods=['POST'])
 @login_required
