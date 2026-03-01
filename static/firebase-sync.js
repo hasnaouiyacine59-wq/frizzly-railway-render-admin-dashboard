@@ -30,14 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Bulk update Firebase
-function bulkUpdateFirebase(orderIds, status) {
+function bulkUpdateFirebase(orderIds, status, progressCallback) {
     if (!window.db) return Promise.resolve();
     
     const batch = window.db.batch();
+    const total = orderIds.length;
+    let completed = 0;
     
     orderIds.forEach(orderId => {
         const ref = window.db.collection('orders').doc(orderId);
-        // Direct update without reading - no wasted reads!
         batch.update(ref, { 
             status: status, 
             updatedAt: Date.now() 
@@ -47,6 +48,7 @@ function bulkUpdateFirebase(orderIds, status) {
     return batch.commit()
         .then(() => {
             console.log(`✅ ${orderIds.length} orders updated in Firebase`);
+            if (progressCallback) progressCallback(total, total);
             return true;
         })
         .catch(err => {

@@ -295,13 +295,29 @@ document.getElementById('bulkForm').addEventListener('submit', function(e) {
     
     const status = this.querySelector('[name="status"]').value;
     const orderIds = Array.from(checked).map(cb => cb.value);
+    const total = orderIds.length;
     
-    // Show loading modal
-    document.getElementById('loadingModal').classList.add('show');
+    // Show loading modal with counter
+    const modal = document.getElementById('loadingModal');
+    const counter = document.getElementById('progressCounter');
+    modal.classList.add('show');
+    counter.textContent = `0/${total}`;
     
     // Update Firebase directly (no reads, only writes!)
     if (window.bulkUpdateFirebase) {
-        bulkUpdateFirebase(orderIds, status).then(() => {
+        // Simulate progress for better UX (Firebase batch is atomic)
+        let current = 0;
+        const progressInterval = setInterval(() => {
+            if (current < total) {
+                current++;
+                counter.textContent = `${current}/${total}`;
+            }
+        }, 50); // Update every 50ms
+        
+        bulkUpdateFirebase(orderIds, status, (completed, total) => {
+            clearInterval(progressInterval);
+            counter.textContent = `${total}/${total}`;
+        }).then(() => {
             // After Firebase update, submit form to update PostgreSQL
             const form = document.getElementById('bulkForm');
             const tempForm = document.createElement('form');
