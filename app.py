@@ -175,6 +175,11 @@ def order_detail(order_id):
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT * FROM orders WHERE id = %s", (order_id,))
     order = cur.fetchone()
+    
+    # Get available drivers
+    cur.execute("SELECT * FROM drivers WHERE status = 'available' ORDER BY name")
+    available_drivers = cur.fetchall()
+    
     cur.close()
     conn.close()
     
@@ -182,17 +187,34 @@ def order_detail(order_id):
         flash('Order not found')
         return redirect(url_for('orders'))
     
-    return render_template('order_detail.html', order=order, valid_statuses=VALID_STATUSES)
+    return render_template('order_detail.html', order=order, valid_statuses=VALID_STATUSES, available_drivers=available_drivers)
 
 @app.route('/orders/<order_id>/update', methods=['POST'])
 @login_required
 def update_order(order_id):
     status = request.form.get('status')
+    driver_id = request.form.get('driver_id')
     
     # Update PostgreSQL
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("UPDATE orders SET status = %s, updated_at = NOW() WHERE id = %s", (status, order_id))
+    
+    if driver_id:
+        # Get driver info
+        cur.execute("SELECT name, phone FROM drivers WHERE id = %s", (driver_id,))
+        driver = cur.fetchone()
+        if driver:
+            cur.execute("""
+                UPDATE orders 
+                SET driver_id = %s, driver_name = %s, driver_phone = %s, updated_at = NOW() 
+                WHERE id = %s
+            """, (driver_id, driver[0], driver[1], order_id))
+            # Update driver status
+            cur.execute("UPDATE drivers SET status = 'on_delivery', updated_at = NOW() WHERE id = %s", (driver_id,))
+    
+    if status:
+        cur.execute("UPDATE orders SET status = %s, updated_at = NOW() WHERE id = %s", (status, order_id))
+    
     conn.commit()
     cur.close()
     conn.close()
@@ -292,6 +314,25 @@ def users():
     conn.close()
     
     return render_template('users.html', users=users)
+
+@app.route('/delivery')
+@login_required
+def delivery():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Get orders that are out for delivery or ready for pickup
+    cur.execute("""
+        SELECT * FROM orders 
+        WHERE status IN ('OUT_FOR_DELIVERY', 'READY_FOR_PICKUP') 
+        ORDER BY timestamp DESC
+    """)
+    deliveries = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    return render_template('delivery.html', deliveries=deliveries)
 
 @app.route('/drivers')
 @login_required
