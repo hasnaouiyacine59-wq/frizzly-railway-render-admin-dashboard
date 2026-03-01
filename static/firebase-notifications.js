@@ -68,32 +68,32 @@ function setupOrderListener() {
 function updateBellNotifications() {
     if (!db) return;
     
-    db.collection('orders').orderBy('timestamp', 'desc').limit(50)
+    const oneHourAgo = Date.now() - 3600000;
+    
+    // Get all orders from last hour for accurate count
+    db.collection('orders')
+        .where('timestamp', '>', oneHourAgo)
+        .orderBy('timestamp', 'desc')
         .onSnapshot((snapshot) => {
             const notificationList = document.getElementById('notificationList');
             const badge = document.getElementById('notificationBadge');
             
             if (!notificationList) return;
             
-            let newOrdersCount = 0;
+            const newOrdersCount = snapshot.size; // Total count of new orders
             let html = '';
             let displayCount = 0;
             
+            // Only show first 10 in dropdown
             snapshot.docs.forEach((doc) => {
-                const order = doc.data();
-                const orderId = doc.id;
-                
-                // Check if order is new (less than 1 hour old)
-                const orderTime = order.timestamp || 0;
-                const isNew = (Date.now() - orderTime) < 3600000;
-                
-                if (isNew) newOrdersCount++;
-                
-                // Only show first 10 in dropdown
                 if (displayCount < 10) {
+                    const order = doc.data();
+                    const orderId = doc.id;
+                    const orderTime = order.timestamp || 0;
+                    
                     html += `
                         <li>
-                            <a class="dropdown-item ${isNew ? 'bg-light' : ''}" href="/orders/${orderId}">
+                            <a class="dropdown-item bg-light" href="/orders/${orderId}">
                                 <div class="d-flex align-items-start">
                                     <i class="bi bi-cart-check text-success me-2 mt-1"></i>
                                     <div class="flex-grow-1">
@@ -120,7 +120,7 @@ function updateBellNotifications() {
             
             notificationList.innerHTML = html;
             
-            // Update badge with actual new orders count
+            // Update badge with actual count
             if (newOrdersCount > 0) {
                 badge.textContent = newOrdersCount > 99 ? '99+' : newOrdersCount;
                 badge.style.display = 'block';
