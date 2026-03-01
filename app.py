@@ -125,7 +125,7 @@ def orders():
     cur.close()
     conn.close()
     
-    return render_template('orders.html', orders=orders)
+    return render_template('orders.html', orders=orders, valid_statuses=VALID_STATUSES)
 
 # Valid order statuses
 VALID_STATUSES = [
