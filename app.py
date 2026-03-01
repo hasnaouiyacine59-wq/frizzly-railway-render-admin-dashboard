@@ -334,6 +334,89 @@ def delivery():
     
     return render_template('delivery.html', deliveries=deliveries)
 
+@app.route('/revenue')
+@login_required
+def revenue():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Total revenue
+    cur.execute("""
+        SELECT 
+            SUM(CASE WHEN status = 'DELIVERED' THEN total_amount ELSE 0 END) as total_revenue,
+            COUNT(CASE WHEN status = 'DELIVERED' THEN 1 END) as completed_orders,
+            AVG(CASE WHEN status = 'DELIVERED' THEN total_amount END) as avg_order_value
+        FROM orders
+    """)
+    stats = dict(cur.fetchone())
+    
+    # Revenue by day (last 30 days)
+    cur.execute("""
+        SELECT 
+            DATE(created_at) as date,
+            SUM(CASE WHEN status = 'DELIVERED' THEN total_amount ELSE 0 END) as revenue,
+            COUNT(CASE WHEN status = 'DELIVERED' THEN 1 END) as orders
+        FROM orders
+        WHERE created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+    """)
+    daily_revenue = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    return render_template('revenue.html', stats=stats, daily_revenue=daily_revenue)
+
+@app.route('/analytics')
+@login_required
+def analytics():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Order status breakdown
+    cur.execute("""
+        SELECT 
+            status,
+            COUNT(*) as count,
+            SUM(total_amount) as total
+        FROM orders
+        GROUP BY status
+        ORDER BY count DESC
+    """)
+    status_breakdown = cur.fetchall()
+    
+    # Top products
+    cur.execute("""
+        SELECT 
+            name,
+            stock,
+            price,
+            category
+        FROM products
+        WHERE is_active = true
+        ORDER BY stock DESC
+        LIMIT 10
+    """)
+    top_products = cur.fetchall()
+    
+    # Recent activity
+    cur.execute("""
+        SELECT COUNT(*) as total_orders,
+               COUNT(CASE WHEN created_at >= NOW() - INTERVAL '7 days' THEN 1 END) as weekly_orders,
+               COUNT(CASE WHEN created_at >= NOW() - INTERVAL '1 day' THEN 1 END) as daily_orders
+        FROM orders
+    """)
+    activity = dict(cur.fetchone())
+    
+    cur.close()
+    conn.close()
+    
+    return render_template('analytics.html', 
+                         status_breakdown=status_breakdown,
+                         top_products=top_products,
+                         activity=activity)
+
 @app.route('/drivers')
 @login_required
 def drivers():

@@ -258,31 +258,16 @@
                 </li>
                 <li class="menu-header">Analytics & Reports</li>
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'revenue' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                    <a class="nav-link {% if request.endpoint == 'revenue' %}active{% endif %}" href="{{ url_for('revenue') }}">
                         <i class="bi bi-cash-stack"></i> <span>Revenue</span>
                     </a>
                 </li>
                 <li>
-                    <a class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                    <a class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('analytics') }}">
                         <i class="bi bi-graph-up"></i> <span>Analytics</span>
                     </a>
                 </li>
                 <li class="menu-header">System</li>
-                <li>
-                    <a class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                        <i class="bi bi-bell"></i> <span>Notifications</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link {% if request.endpoint == 'activity_logs' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                        <i class="bi bi-clock-history"></i> <span>Activity Logs</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                        <i class="bi bi-gear"></i> <span>Settings</span>
-                    </a>
-                </li>
                 <li>
                     <a class="nav-link" href="{{ url_for('logout') }}">
                         <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
