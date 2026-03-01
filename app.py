@@ -213,17 +213,10 @@ def products():
     
     return render_template('products.html', products=products)
 
-# Product categories
+# Product categories (matching Android app)
 CATEGORIES = [
     'Fruits',
-    'Vegetables',
-    'Dairy',
-    'Meat',
-    'Bakery',
-    'Beverages',
-    'Snacks',
-    'Frozen',
-    'Other'
+    'Vegetables'
 ]
 
 @app.route('/products/add', methods=['GET', 'POST'])
