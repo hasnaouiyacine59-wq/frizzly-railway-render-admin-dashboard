@@ -9,9 +9,24 @@ from psycopg2.extras import RealDictCursor, Json
 import os
 import json
 from datetime import datetime
+import logging
+from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'change-me-in-production')
+
+# Setup logging
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+
+file_handler = RotatingFileHandler('logs/debug_logs.log', maxBytes=10240000, backupCount=10)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.DEBUG)
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.DEBUG)
+app.logger.info('Dashboard startup')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
