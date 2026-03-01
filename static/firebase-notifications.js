@@ -59,6 +59,74 @@ function setupOrderListener() {
                 }
             });
         });
+    
+    // Also update bell dropdown with recent orders
+    updateBellNotifications();
+}
+
+function updateBellNotifications() {
+    if (!db) return;
+    
+    db.collection('orders').orderBy('timestamp', 'desc').limit(10)
+        .onSnapshot((snapshot) => {
+            const notificationList = document.getElementById('notificationList');
+            const badge = document.getElementById('notificationBadge');
+            
+            if (!notificationList) return;
+            
+            let newOrdersCount = 0;
+            let html = '';
+            
+            snapshot.docs.forEach((doc) => {
+                const order = doc.data();
+                const orderId = doc.id;
+                
+                // Check if order is new (less than 1 hour old)
+                const orderTime = order.timestamp || 0;
+                const isNew = (Date.now() - orderTime) < 3600000;
+                
+                if (isNew) newOrdersCount++;
+                
+                html += `
+                    <li>
+                        <a class="dropdown-item ${isNew ? 'bg-light' : ''}" href="/orders/${orderId}">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-cart-check text-success me-2 mt-1"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">Order #${orderId.slice(-8)}</div>
+                                    <small class="text-muted">$${order.totalAmount || 0} - ${order.customerName || 'Customer'}</small>
+                                    <br><small class="text-muted">${new Date(orderTime).toLocaleString()}</small>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                `;
+            });
+            
+            if (html === '') {
+                html = `
+                    <li class="text-center text-muted py-3">
+                        <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                        No new notifications
+                    </li>
+                `;
+            }
+            
+            notificationList.innerHTML = html;
+            
+            // Update badge
+            if (newOrdersCount > 0) {
+                badge.textContent = newOrdersCount;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+}
+
+function clearNotifications() {
+    const badge = document.getElementById('notificationBadge');
+    if (badge) badge.style.display = 'none';
 }
 
 function showNotification(order, orderId) {
