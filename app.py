@@ -109,9 +109,30 @@ def dashboard():
     
     return render_template('dashboard.html', stats=stats, recent_orders=recent_orders)
 
-@app.route('/orders')
+@app.route('/orders', methods=['GET', 'POST'])
 @login_required
 def orders():
+    if request.method == 'POST':
+        # Handle bulk update
+        status = request.form.get('status')
+        order_ids = request.form.getlist('order_ids')
+        
+        if order_ids and status:
+            conn = get_db()
+            cur = conn.cursor()
+            for order_id in order_ids:
+                cur.execute("UPDATE orders SET status = %s, updated_at = NOW() WHERE id = %s", (status, order_id))
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            flash(f'{len(order_ids)} orders updated to {status}')
+        else:
+            flash('No orders selected or status not provided')
+        
+        return redirect(url_for('orders'))
+    
+    # GET request
     status_filter = request.args.get('status')
     conn = get_db()
     cur = conn.cursor(cursor_factory=RealDictCursor)

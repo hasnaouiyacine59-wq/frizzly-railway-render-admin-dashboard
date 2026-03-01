@@ -69,6 +69,7 @@ function updateBellNotifications() {
     if (!db) return;
     
     const oneHourAgo = Date.now() - 3600000;
+    const readOrders = JSON.parse(localStorage.getItem('readOrders') || '[]');
     
     // Get all orders from last hour for accurate count
     db.collection('orders')
@@ -80,20 +81,24 @@ function updateBellNotifications() {
             
             if (!notificationList) return;
             
-            const newOrdersCount = snapshot.size; // Total count of new orders
+            let unreadCount = 0;
             let html = '';
             let displayCount = 0;
             
             // Only show first 10 in dropdown
             snapshot.docs.forEach((doc) => {
+                const orderId = doc.id;
+                const isRead = readOrders.includes(orderId);
+                
+                if (!isRead) unreadCount++;
+                
                 if (displayCount < 10) {
                     const order = doc.data();
-                    const orderId = doc.id;
                     const orderTime = order.timestamp || 0;
                     
                     html += `
                         <li>
-                            <a class="dropdown-item bg-light" href="/orders/${orderId}">
+                            <a class="dropdown-item ${!isRead ? 'bg-light' : ''}" href="/orders/${orderId}" onclick="markAsRead('${orderId}')">
                                 <div class="d-flex align-items-start">
                                     <i class="bi bi-cart-check text-success me-2 mt-1"></i>
                                     <div class="flex-grow-1">
@@ -120,9 +125,9 @@ function updateBellNotifications() {
             
             notificationList.innerHTML = html;
             
-            // Update badge with actual count
-            if (newOrdersCount > 0) {
-                badge.textContent = newOrdersCount > 99 ? '99+' : newOrdersCount;
+            // Update badge with unread count
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
                 badge.style.display = 'block';
             } else {
                 badge.style.display = 'none';
@@ -130,9 +135,30 @@ function updateBellNotifications() {
         });
 }
 
+function markAsRead(orderId) {
+    const readOrders = JSON.parse(localStorage.getItem('readOrders') || '[]');
+    if (!readOrders.includes(orderId)) {
+        readOrders.push(orderId);
+        localStorage.setItem('readOrders', JSON.stringify(readOrders));
+    }
+}
+
 function clearNotifications() {
     const badge = document.getElementById('notificationBadge');
     if (badge) badge.style.display = 'none';
+    
+    // Mark all as read
+    if (!db) return;
+    const oneHourAgo = Date.now() - 3600000;
+    
+    db.collection('orders')
+        .where('timestamp', '>', oneHourAgo)
+        .get()
+        .then(snapshot => {
+            const readOrders = snapshot.docs.map(doc => doc.id);
+            localStorage.setItem('readOrders', JSON.stringify(readOrders));
+            updateBellNotifications();
+        });
 }
 
 function showNotification(order, orderId) {
