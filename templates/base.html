@@ -408,6 +408,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
+    <!-- Firebase Real-time Notifications -->
+    <script src="{{ url_for('static', filename='firebase-notifications.js') }}"></script>
+    
+    <!-- Firebase Sync for Updates -->
+    <script src="{{ url_for('static', filename='firebase-sync.js') }}"></script>
+    
     <!-- Real-time notifications handled below -->
     {% block extra_js %}
     <script>
@@ -641,8 +647,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 </script>
-
-<!-- Firebase Real-time Notifications -->
-<script src="{{ url_for('static', filename='firebase-notifications.js') }}"></script>
 
 {% endblock %}

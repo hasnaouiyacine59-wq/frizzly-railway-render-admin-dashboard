@@ -147,6 +147,8 @@ def order_detail(order_id):
 @login_required
 def update_order(order_id):
     status = request.form.get('status')
+    
+    # Update PostgreSQL
     conn = get_db()
     cur = conn.cursor()
     cur.execute("UPDATE orders SET status = %s, updated_at = NOW() WHERE id = %s", (status, order_id))
@@ -154,6 +156,7 @@ def update_order(order_id):
     cur.close()
     conn.close()
     
+    # Update Firebase (client-side will handle this via JS)
     flash('Order updated successfully')
     return redirect(url_for('order_detail', order_id=order_id))
 

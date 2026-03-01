@@ -13,6 +13,7 @@ let db;
 try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    window.db = db; // Make available globally for firebase-sync.js
     console.log('✅ Firebase initialized successfully');
     
     // Test connection
