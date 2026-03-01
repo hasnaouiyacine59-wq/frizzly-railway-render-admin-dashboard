@@ -1,44 +1,65 @@
-// Firebase Configuration
+// Firebase Configuration - REPLACE WITH YOUR ACTUAL CONFIG
 const firebaseConfig = {
-    apiKey: "AIzaSyBOaVhKxGxLxGxLxGxLxGxLxGxLxGxLxGx", // Replace with your Firebase config
+    apiKey: "AIzaSyBOaVhKxGxLxGxLxGxLxGxLxGxLxGxLxGx", // ⚠️ REPLACE THIS
     authDomain: "frizzly-9a65f.firebaseapp.com",
     projectId: "frizzly-9a65f",
     storageBucket: "frizzly-9a65f.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef"
+    messagingSenderId: "123456789", // ⚠️ REPLACE THIS
+    appId: "1:123456789:web:abcdef" // ⚠️ REPLACE THIS
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+let db;
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    console.log('✅ Firebase initialized successfully');
+    
+    // Test connection
+    db.collection('orders').limit(1).get()
+        .then(() => {
+            console.log('✅ Firebase connection working');
+            setupOrderListener();
+        })
+        .catch(err => {
+            console.error('❌ Firebase connection failed:', err);
+            console.error('⚠️ Check Firebase Security Rules - they may be blocking access');
+        });
+} catch (error) {
+    console.error('❌ Firebase initialization failed:', error);
+}
 
 // Notification sound
-const notificationSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHAU2jdXvzn0pBSh+zPLaizsKGGe67OmiUhELTqfj8bllHAU3j9bwz38qBSh/zfPbjDwLGGi77OqjUxEMUKjk8rpmHQU4kNfx0IEsBSqAzvPcjT0LGWm87OukUxIMUank87toHgU5ktjx0YMtBSuBz/PdjT4LGmq97OylVBIMU6vl87xpHwU6k9ny0oQuBSyCz/TejT8LG2u+7O2mVRMNVKzm9L1qIAU7lNrz04UvBSyC0PTejUALHGy/7O6nVhMNVa3m9L5rIQU8ldrz1IYwBi2D0fTfjUELHW3A7e+oVxQOVq7n9b9sIgU9ltvz1YcxBi6E0vXgjUILHm7B7fCpWBQOV6/o9cBtIwU+l9v01ogzBi+F0/XhjUMLH2/C7vCqWRUPWLDp9sFuJAY/mNz01Yk0BzCG1PbijkQMIHHD7/GrWhUPWbHq98FvJQZAmdz11Yo1BzGH1fbkj0UNIXLEBzKI1vblkEYNInPF8PKsWxYQW7Lr+MJwJgZBmtz21os2BzKJ1/fmkUcOI3TG8fOtXBYRXLPs+cNxJwZCm9331ow3BzOK2PfnkkgOJHXH8vSuXRcRXbTt+sRyKAdDnN741o04CDSLBzWM2fjpk0kPJXbI8/WvXhcSXrXu+8VzKQdEnN/51484CDaMBzeN2vnqlEoPJnfJ9PawXxgTX7bv/MZ0KgdFnd/62J05CTiOBziO2/rrlUsSJ3jK9fexYBkUYLfw/cd1KwhGnt/72Z86CTmP). ');
+const notificationSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHAU2jdXvzn0pBSh+zPLaizsKGGe67OmiUhELTqfj8bllHAU3j9bwz38qBSh/zfPbjDwLGGi77OqjUxEMUKjk8rpmHQU4kNfx0IEsBSqAzvPcjT0LGWm87OukUxIMUank87toHgU5ktjx0YMtBSuBz/PdjT4LGmq97OylVBIMU6vl87xpHwU6k9ny0oQuBSyCz/TejT8LG2u+7O2mVRMNVKzm9L1qIAU7lNrz04UvBSyC0PTejUALHGy/7O6nVhMNVa3m9L5rIQU8ldrz1IYwBi2D0fTfjUELHW3A7e+oVxQOVq7n9b9sIgU9ltvz1YcxBi6E0vXgjUILHm7B7fCpWBQOV6/o9cBtIwU+l9v01ogzBi+F0/XhjUMLH2/C7vCqWRUPWLDp9sFuJAY/mNz01Yk0BzCG1PbijkQMIHHD7/GrWhUPWbHq98FvJQZAmdz11Yo1BzGH1fbkj0UNIXLEBzKI1vblkEYNInPF8PKsWxYQW7Lr+MJwJgZBmtz21os2BzKJ1/fmkUcOI3TG8fOtXBYRXLPs+cNxJwZCm9331ow3BzOK2PfnkkgOJHXH8vSuXRcRXbTt+sRyKAdDnN741o04CDSLBzWM2fjpk0kPJXbI8/WvXhcSXrXu+8VzKQdEnN/51484CDaMBzeN2vnqlEoPJnfJ9PawXxgTX7bv/MZ0KgdFnd/62J05CTiOBziO2/rrlUsSJ3jK9fexYBkUYLfw/cd1KwhGnt/72Z86CTmP');
 
 let lastOrderId = null;
 
-// Listen for new orders
-db.collection('orders').orderBy('timestamp', 'desc').limit(1)
-    .onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === 'added') {
-                const order = change.doc.data();
-                const orderId = change.doc.id;
-                
-                // Skip first load
-                if (lastOrderId === null) {
-                    lastOrderId = orderId;
-                    return;
+function setupOrderListener() {
+    if (!db) return;
+    
+    // Listen for new orders
+    db.collection('orders').orderBy('timestamp', 'desc').limit(1)
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const order = change.doc.data();
+                    const orderId = change.doc.id;
+                    
+                    // Skip first load
+                    if (lastOrderId === null) {
+                        lastOrderId = orderId;
+                        return;
+                    }
+                    
+                    // New order detected
+                    if (orderId !== lastOrderId) {
+                        lastOrderId = orderId;
+                        showNotification(order, orderId);
+                    }
                 }
-                
-                // New order detected
-                if (orderId !== lastOrderId) {
-                    lastOrderId = orderId;
-                    showNotification(order, orderId);
-                }
-            }
+            });
         });
-    });
+}
 
 function showNotification(order, orderId) {
     // Play sound
