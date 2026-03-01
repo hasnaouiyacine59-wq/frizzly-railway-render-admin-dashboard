@@ -213,6 +213,19 @@ def products():
     
     return render_template('products.html', products=products)
 
+# Product categories
+CATEGORIES = [
+    'Fruits',
+    'Vegetables',
+    'Dairy',
+    'Meat',
+    'Bakery',
+    'Beverages',
+    'Snacks',
+    'Frozen',
+    'Other'
+]
+
 @app.route('/products/add', methods=['GET', 'POST'])
 @login_required
 def add_product():
@@ -238,7 +251,7 @@ def add_product():
         flash('Product added successfully')
         return redirect(url_for('products'))
     
-    return render_template('add_product.html')
+    return render_template('add_product.html', categories=[{'name': c} for c in CATEGORIES])
 
 @app.route('/products/<product_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -273,7 +286,7 @@ def edit_product(product_id):
     cur.close()
     conn.close()
     
-    return render_template('edit_product.html', product=product)
+    return render_template('edit_product.html', product=product, categories=[{'name': c} for c in CATEGORIES])
 
 @app.route('/users')
 @login_required
