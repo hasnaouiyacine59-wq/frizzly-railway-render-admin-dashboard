@@ -115,13 +115,20 @@ def orders():
     if request.method == 'POST':
         # Handle bulk update
         status = request.form.get('status')
-        order_ids = request.form.getlist('order_ids')
+        order_ids = request.form.getlist('order_ids[]')  # Fix: add [] for multiple values
         
         if order_ids and status:
             conn = get_db()
             cur = conn.cursor()
-            for order_id in order_ids:
-                cur.execute("UPDATE orders SET status = %s, updated_at = NOW() WHERE id = %s", (status, order_id))
+            
+            # Batch update for efficiency
+            placeholders = ','.join(['%s'] * len(order_ids))
+            cur.execute(f"""
+                UPDATE orders 
+                SET status = %s, updated_at = NOW() 
+                WHERE id IN ({placeholders})
+            """, [status] + order_ids)
+            
             conn.commit()
             cur.close()
             conn.close()

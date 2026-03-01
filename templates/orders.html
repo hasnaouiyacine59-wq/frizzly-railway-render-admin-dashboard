@@ -165,7 +165,7 @@
                         {% for order in orders %}
                         <tr>
                             <td class="px-4">
-                                <input type="checkbox" name="order_ids" value="{{ order.id }}" class="order-checkbox" form="bulkForm">
+                                <input type="checkbox" name="order_ids[]" value="{{ order.id }}" class="order-checkbox" form="bulkForm">
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark">#{{ order.order_id[-8:] if order.order_id else order.id[:8] }}</span>
@@ -282,5 +282,18 @@ function updateSelectedCount() {
     const checked = document.querySelectorAll('.order-checkbox:checked').length;
     selectedCount.textContent = `${checked} order${checked !== 1 ? 's' : ''} selected`;
 }
+
+// Show loading on form submit
+document.getElementById('bulkForm').addEventListener('submit', function(e) {
+    const checked = document.querySelectorAll('.order-checkbox:checked').length;
+    if (checked === 0) {
+        e.preventDefault();
+        alert('Please select at least one order');
+        return;
+    }
+    
+    // Show loading modal
+    document.getElementById('loadingModal').classList.add('show');
+});
 </script>
 {% endblock %}
