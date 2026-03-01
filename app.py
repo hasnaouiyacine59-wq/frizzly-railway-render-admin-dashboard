@@ -141,17 +141,53 @@ def orders():
     
     # GET request
     status_filter = request.args.get('status')
+    search = request.args.get('search')
+    export = request.args.get('export')
+    
     conn = get_db()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
-    if status_filter:
-        cur.execute("SELECT * FROM orders WHERE status = %s ORDER BY timestamp DESC", (status_filter,))
-    else:
-        cur.execute("SELECT * FROM orders ORDER BY timestamp DESC")
+    query = "SELECT * FROM orders WHERE 1=1"
+    params = []
     
+    if status_filter:
+        query += " AND status = %s"
+        params.append(status_filter)
+    
+    if search:
+        query += " AND (order_id ILIKE %s OR customer_name ILIKE %s)"
+        params.extend([f'%{search}%', f'%{search}%'])
+    
+    query += " ORDER BY timestamp DESC"
+    
+    cur.execute(query, params)
     orders = cur.fetchall()
     cur.close()
     conn.close()
+    
+    # Export to CSV
+    if export == 'csv':
+        import csv
+        from io import StringIO
+        from flask import make_response
+        
+        si = StringIO()
+        writer = csv.writer(si)
+        writer.writerow(['Order ID', 'Customer', 'Status', 'Amount', 'Date'])
+        
+        for order in orders:
+            writer.writerow([
+                order.get('order_id', ''),
+                order.get('customer_name', ''),
+                order.get('status', ''),
+                order.get('total_amount', 0),
+                order.get('created_at', '')
+            ])
+        
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = "attachment; filename=orders.csv"
+        output.headers["Content-type"] = "text/csv"
+        return output
     
     return render_template('orders.html', orders=orders, valid_statuses=VALID_STATUSES)
 
