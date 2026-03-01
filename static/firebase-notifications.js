@@ -71,10 +71,11 @@ function updateBellNotifications() {
     const oneHourAgo = Date.now() - 3600000;
     const readOrders = JSON.parse(localStorage.getItem('readOrders') || '[]');
     
-    // Get all orders from last hour for accurate count
+    // OPTIMIZED: Only listen to last 20 orders instead of all from last hour
+    // This drastically reduces Firebase reads
     db.collection('orders')
-        .where('timestamp', '>', oneHourAgo)
         .orderBy('timestamp', 'desc')
+        .limit(20) // Only get 20 most recent orders
         .onSnapshot((snapshot) => {
             const notificationList = document.getElementById('notificationList');
             const badge = document.getElementById('notificationBadge');
@@ -88,17 +89,17 @@ function updateBellNotifications() {
             // Only show first 10 in dropdown
             snapshot.docs.forEach((doc) => {
                 const orderId = doc.id;
+                const order = doc.data();
+                const orderTime = order.timestamp || 0;
+                const isNew = (Date.now() - orderTime) < 3600000;
                 const isRead = readOrders.includes(orderId);
                 
-                if (!isRead) unreadCount++;
+                if (isNew && !isRead) unreadCount++;
                 
                 if (displayCount < 10) {
-                    const order = doc.data();
-                    const orderTime = order.timestamp || 0;
-                    
                     html += `
                         <li>
-                            <a class="dropdown-item ${!isRead ? 'bg-light' : ''}" href="/orders/${orderId}" onclick="markAsRead('${orderId}')">
+                            <a class="dropdown-item ${!isRead && isNew ? 'bg-light' : ''}" href="/orders/${orderId}" onclick="markAsRead('${orderId}')">
                                 <div class="d-flex align-items-start">
                                     <i class="bi bi-cart-check text-success me-2 mt-1"></i>
                                     <div class="flex-grow-1">
@@ -147,18 +148,19 @@ function clearNotifications() {
     const badge = document.getElementById('notificationBadge');
     if (badge) badge.style.display = 'none';
     
-    // Mark all as read
-    if (!db) return;
-    const oneHourAgo = Date.now() - 3600000;
+    // Mark visible orders as read (no Firebase query needed)
+    const notificationList = document.getElementById('notificationList');
+    const links = notificationList.querySelectorAll('a[href*="/orders/"]');
+    const orderIds = Array.from(links).map(link => {
+        const match = link.href.match(/\/orders\/([^"]+)/);
+        return match ? match[1] : null;
+    }).filter(Boolean);
     
-    db.collection('orders')
-        .where('timestamp', '>', oneHourAgo)
-        .get()
-        .then(snapshot => {
-            const readOrders = snapshot.docs.map(doc => doc.id);
-            localStorage.setItem('readOrders', JSON.stringify(readOrders));
-            updateBellNotifications();
-        });
+    const readOrders = JSON.parse(localStorage.getItem('readOrders') || '[]');
+    const updated = [...new Set([...readOrders, ...orderIds])];
+    localStorage.setItem('readOrders', JSON.stringify(updated));
+    
+    updateBellNotifications();
 }
 
 function showNotification(order, orderId) {
