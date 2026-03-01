@@ -1,0 +1,143 @@
+/* Professional Dashboard Enhancements */
+
+/* Smooth Animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Enhanced Cards */
+.stat-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.stat-card.primary { border-left-color: #0d6efd; }
+.stat-card.success { border-left-color: #198754; }
+.stat-card.warning { border-left-color: #ffc107; }
+.stat-card.info { border-left-color: #0dcaf0; }
+.stat-card.danger { border-left-color: #dc3545; }
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+}
+
+/* Loading Spinner */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Enhanced Tables */
+.table-hover tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Status Badges */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Action Buttons */
+.btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+    transform: scale(1.1);
+}
+
+/* Search Highlight */
+.search-highlight {
+    background-color: #fff3cd;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 20px;
+}
+
+.page-link {
+    color: #0d6efd;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.page-link:hover {
+    background-color: #0d6efd;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Charts Container */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 20px 0;
+}
+
+/* Print Styles */
+@media print {
+    .sidebar, .navbar, .btn, .no-print {
+        display: none !important;
+    }
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 15px;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
