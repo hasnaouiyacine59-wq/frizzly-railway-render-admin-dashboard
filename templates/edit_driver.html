@@ -22,15 +22,11 @@
             <div class="col-md-6 mb-3">
                 <label class="form-label">Vehicle Type</label>
                 <select name="vehicle_type" class="form-select">
-                    <option value="bike" {% if driver.vehicleType == 'bike' %}selected{% endif %}>Bike</option>
-                    <option value="scooter" {% if driver.vehicleType == 'scooter' %}selected{% endif %}>Scooter</option>
-                    <option value="car" {% if driver.vehicleType == 'car' %}selected{% endif %}>Car</option>
-                    <option value="van" {% if driver.vehicleType == 'van' %}selected{% endif %}>Van</option>
+                    <option value="bike" {% if driver.vehicle_type == 'bike' %}selected{% endif %}>Bike</option>
+                    <option value="scooter" {% if driver.vehicle_type == 'scooter' %}selected{% endif %}>Scooter</option>
+                    <option value="car" {% if driver.vehicle_type == 'car' %}selected{% endif %}>Car</option>
+                    <option value="van" {% if driver.vehicle_type == 'van' %}selected{% endif %}>Van</option>
                 </select>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Vehicle Number</label>
-                <input type="text" name="vehicle_number" class="form-control" value="{{ driver.vehicleNumber }}">
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label">Status</label>
@@ -46,7 +42,7 @@
             <button type="submit" class="btn btn-gradient">
                 <i class="bi bi-check-circle me-2"></i>Update Driver
             </button>
-            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+            <a href="{{ url_for('drivers') }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
     </form>
 </div>

@@ -22,7 +22,7 @@
             </div>
             <div class="mb-3">
                 <label class="text-muted small">Vehicle</label>
-                <p class="mb-0">{{ driver.vehicleType|upper }} - {{ driver.vehicleNumber }}</p>
+                <p class="mb-0">{{ driver.vehicle_type|upper if driver.vehicle_type else 'N/A' }}</p>
             </div>
             <div class="mb-3">
                 <label class="text-muted small">Status</label>
@@ -36,26 +36,14 @@
                     {% endif %}
                 </p>
             </div>
-            <div class="mb-3">
-                <label class="text-muted small">Total Deliveries</label>
-                <p class="mb-0"><strong>{{ driver.totalDeliveries or 0 }}</strong></p>
-            </div>
-            <div class="mb-3">
-                <label class="text-muted small">Rating</label>
-                <p class="mb-0">
-                    <i class="bi bi-star-fill text-warning"></i> {{ driver.rating or 5.0 }}
-                </p>
-            </div>
             {% if current_user.role == 'admin' %}
             <div class="d-flex gap-2 mt-4">
                 <a href="{{ url_for('edit_driver', driver_id=driver.id) }}" class="btn btn-outline-primary btn-sm flex-fill">
                     <i class="bi bi-pencil"></i> Edit
                 </a>
-                <form method="POST" action="{{ url_for('delete_driver', driver_id=driver.id) }}" class="flex-fill" onsubmit="return confirm('Delete this driver?');">
-                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                        <i class="bi bi-trash"></i> Delete
-                    </button>
-                </form>
+                <a href="{{ url_for('drivers') }}" class="btn btn-outline-secondary btn-sm flex-fill">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
             </div>
             {% endif %}
         </div>
@@ -64,34 +52,7 @@
     <div class="col-md-8">
         <div class="table-card">
             <h5 class="mb-4"><i class="bi bi-clock-history me-2"></i>Delivery History</h5>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for delivery in deliveries %}
-                        <tr>
-                            <td>
-                                <a href="{{ url_for('order_detail', order_id=delivery.id) }}">{{ delivery.id }}</a>
-                            </td>
-                            <td>{{ delivery.createdAt }}</td>
-                            <td>${{ "%.2f"|format(delivery.totalAmount) }}</td>
-                            <td><span class="badge badge-{{ delivery.status|lower }}">{{ delivery.status }}</span></td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">No deliveries yet</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <p class="text-muted text-center py-4">Delivery history tracking coming soon</p>
         </div>
     </div>
 </div>

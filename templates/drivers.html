@@ -57,7 +57,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="mb-0"><i class="bi bi-people me-2"></i>All Drivers</h5>
         {% if current_user.role == 'admin' %}
-        <a href="{{ url_for('dashboard') }}" class="btn btn-gradient">
+        <a href="{{ url_for('add_driver') }}" class="btn btn-gradient">
             <i class="bi bi-plus-circle me-2"></i>Add Driver
         </a>
         {% endif %}
@@ -86,8 +86,7 @@
                     </td>
                     <td>{{ driver.phone }}</td>
                     <td>
-                        <span class="badge bg-secondary">{{ driver.vehicleType|upper }}</span>
-                        <small class="text-muted">{{ driver.vehicleNumber }}</small>
+                        <span class="badge bg-secondary">{{ driver.vehicle_type|upper if driver.vehicle_type else 'N/A' }}</span>
                     </td>
                     <td>
                         {% if driver.status == 'available' %}
@@ -98,9 +97,9 @@
                         <span class="badge bg-secondary">Offline</span>
                         {% endif %}
                     </td>
-                    <td>{{ driver.totalDeliveries or 0 }}</td>
+                    <td>0</td>
                     <td>
-                        <i class="bi bi-star-fill text-warning"></i> {{ driver.rating or 5.0 }}
+                        <i class="bi bi-star-fill text-warning"></i> 5.0
                     </td>
                     <td>
                         <a href="{{ url_for('driver_detail', driver_id=driver.id) }}" class="btn btn-sm btn-outline-primary">
@@ -110,11 +109,6 @@
                         <a href="{{ url_for('edit_driver', driver_id=driver.id) }}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <form method="POST" action="{{ url_for('delete_driver', driver_id=driver.id) }}" class="d-inline" onsubmit="return confirm('Delete this driver?');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
                         {% endif %}
                     </td>
                 </tr>

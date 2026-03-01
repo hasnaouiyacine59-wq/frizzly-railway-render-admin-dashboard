@@ -293,6 +293,103 @@ def users():
     
     return render_template('users.html', users=users)
 
+@app.route('/drivers')
+@login_required
+def drivers():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    cur.execute("""
+        SELECT 
+            COUNT(*) as total,
+            COUNT(CASE WHEN status = 'available' THEN 1 END) as available,
+            COUNT(CASE WHEN status = 'on_delivery' THEN 1 END) as on_delivery,
+            COUNT(CASE WHEN status = 'offline' THEN 1 END) as offline
+        FROM drivers
+    """)
+    stats = dict(cur.fetchone())
+    
+    cur.execute("SELECT * FROM drivers ORDER BY created_at DESC")
+    drivers = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    return render_template('drivers.html', drivers=drivers, stats=stats)
+
+@app.route('/drivers/add', methods=['GET', 'POST'])
+@login_required
+def add_driver():
+    if request.method == 'POST':
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO drivers (id, name, phone, email, vehicle_type, status)
+            VALUES (gen_random_uuid()::text, %s, %s, %s, %s, 'available')
+        """, (
+            request.form.get('name'),
+            request.form.get('phone'),
+            request.form.get('email'),
+            request.form.get('vehicle_type')
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        flash('Driver added successfully')
+        return redirect(url_for('drivers'))
+    
+    return render_template('add_driver.html')
+
+@app.route('/drivers/<driver_id>')
+@login_required
+def driver_detail(driver_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM drivers WHERE id = %s", (driver_id,))
+    driver = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if not driver:
+        flash('Driver not found')
+        return redirect(url_for('drivers'))
+    
+    return render_template('driver_detail.html', driver=driver)
+
+@app.route('/drivers/<driver_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_driver(driver_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    if request.method == 'POST':
+        cur.execute("""
+            UPDATE drivers SET 
+                name = %s, phone = %s, email = %s, 
+                vehicle_type = %s, status = %s, updated_at = NOW()
+            WHERE id = %s
+        """, (
+            request.form.get('name'),
+            request.form.get('phone'),
+            request.form.get('email'),
+            request.form.get('vehicle_type'),
+            request.form.get('status'),
+            driver_id
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        flash('Driver updated successfully')
+        return redirect(url_for('drivers'))
+    
+    cur.execute("SELECT * FROM drivers WHERE id = %s", (driver_id,))
+    driver = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    return render_template('edit_driver.html', driver=driver)
+
 @app.template_filter('timestamp_to_date')
 def timestamp_to_date(timestamp):
     if timestamp:
