@@ -285,15 +285,52 @@ function updateSelectedCount() {
 
 // Show loading on form submit
 document.getElementById('bulkForm').addEventListener('submit', function(e) {
-    const checked = document.querySelectorAll('.order-checkbox:checked').length;
-    if (checked === 0) {
-        e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
+    
+    const checked = document.querySelectorAll('.order-checkbox:checked');
+    if (checked.length === 0) {
         alert('Please select at least one order');
         return;
     }
     
+    const status = this.querySelector('[name="status"]').value;
+    const orderIds = Array.from(checked).map(cb => cb.value);
+    
     // Show loading modal
     document.getElementById('loadingModal').classList.add('show');
+    
+    // Update Firebase directly (no reads, only writes!)
+    if (window.bulkUpdateFirebase) {
+        bulkUpdateFirebase(orderIds, status).then(() => {
+            // After Firebase update, submit form to update PostgreSQL
+            const form = document.getElementById('bulkForm');
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.action = form.action;
+            
+            // Add status
+            const statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'status';
+            statusInput.value = status;
+            tempForm.appendChild(statusInput);
+            
+            // Add order IDs
+            orderIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'order_ids[]';
+                input.value = id;
+                tempForm.appendChild(input);
+            });
+            
+            document.body.appendChild(tempForm);
+            tempForm.submit();
+        });
+    } else {
+        // Fallback: just submit form
+        this.submit();
+    }
 });
 </script>
 {% endblock %}

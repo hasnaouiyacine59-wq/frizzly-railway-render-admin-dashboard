@@ -29,18 +29,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Bulk update
+// Bulk update Firebase
 function bulkUpdateFirebase(orderIds, status) {
-    if (!window.db) return;
+    if (!window.db) return Promise.resolve();
     
     const batch = window.db.batch();
     
     orderIds.forEach(orderId => {
         const ref = window.db.collection('orders').doc(orderId);
-        batch.update(ref, { status: status, updatedAt: Date.now() });
+        // Direct update without reading - no wasted reads!
+        batch.update(ref, { 
+            status: status, 
+            updatedAt: Date.now() 
+        });
     });
     
-    batch.commit()
-        .then(() => console.log(`✅ ${orderIds.length} orders updated in Firebase`))
-        .catch(err => console.error('❌ Bulk update failed:', err));
+    return batch.commit()
+        .then(() => {
+            console.log(`✅ ${orderIds.length} orders updated in Firebase`);
+            return true;
+        })
+        .catch(err => {
+            console.error('❌ Bulk update failed:', err);
+            return false;
+        });
 }
