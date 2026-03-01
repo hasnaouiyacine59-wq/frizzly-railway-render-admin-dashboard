@@ -67,7 +67,7 @@ function setupOrderListener() {
 function updateBellNotifications() {
     if (!db) return;
     
-    db.collection('orders').orderBy('timestamp', 'desc').limit(10)
+    db.collection('orders').orderBy('timestamp', 'desc').limit(50)
         .onSnapshot((snapshot) => {
             const notificationList = document.getElementById('notificationList');
             const badge = document.getElementById('notificationBadge');
@@ -76,6 +76,7 @@ function updateBellNotifications() {
             
             let newOrdersCount = 0;
             let html = '';
+            let displayCount = 0;
             
             snapshot.docs.forEach((doc) => {
                 const order = doc.data();
@@ -87,20 +88,24 @@ function updateBellNotifications() {
                 
                 if (isNew) newOrdersCount++;
                 
-                html += `
-                    <li>
-                        <a class="dropdown-item ${isNew ? 'bg-light' : ''}" href="/orders/${orderId}">
-                            <div class="d-flex align-items-start">
-                                <i class="bi bi-cart-check text-success me-2 mt-1"></i>
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold">Order #${orderId.slice(-8)}</div>
-                                    <small class="text-muted">$${order.totalAmount || 0} - ${order.customerName || 'Customer'}</small>
-                                    <br><small class="text-muted">${new Date(orderTime).toLocaleString()}</small>
+                // Only show first 10 in dropdown
+                if (displayCount < 10) {
+                    html += `
+                        <li>
+                            <a class="dropdown-item ${isNew ? 'bg-light' : ''}" href="/orders/${orderId}">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-cart-check text-success me-2 mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold">Order #${orderId.slice(-8)}</div>
+                                        <small class="text-muted">$${order.totalAmount || 0} - ${order.customerName || 'Customer'}</small>
+                                        <br><small class="text-muted">${new Date(orderTime).toLocaleString()}</small>
+                                    </div>
                                 </div>
-                            </div>
-                        </a>
-                    </li>
-                `;
+                            </a>
+                        </li>
+                    `;
+                    displayCount++;
+                }
             });
             
             if (html === '') {
@@ -114,9 +119,9 @@ function updateBellNotifications() {
             
             notificationList.innerHTML = html;
             
-            // Update badge
+            // Update badge with actual new orders count
             if (newOrdersCount > 0) {
-                badge.textContent = newOrdersCount;
+                badge.textContent = newOrdersCount > 99 ? '99+' : newOrdersCount;
                 badge.style.display = 'block';
             } else {
                 badge.style.display = 'none';
@@ -135,34 +140,44 @@ function showNotification(order, orderId) {
     
     // Show browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('New Order! 🎉', {
+        const notification = new Notification('New Order! 🎉', {
             body: `Order #${orderId.slice(-8)} - $${order.totalAmount || 0}`,
             icon: '/static/logo.png',
-            badge: '/static/logo.png'
+            badge: '/static/logo.png',
+            tag: orderId
         });
+        
+        // Redirect to order when clicked
+        notification.onclick = function() {
+            window.focus();
+            window.location.href = `/orders/${orderId}`;
+            notification.close();
+        };
     }
     
     // Show toast notification
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
+    toast.style.cursor = 'pointer';
+    toast.onclick = function() {
+        window.location.href = `/orders/${orderId}`;
+    };
     toast.innerHTML = `
         <div class="toast-header">
             <strong>🎉 New Order!</strong>
-            <button onclick="this.parentElement.parentElement.remove()">&times;</button>
+            <button onclick="event.stopPropagation(); this.parentElement.parentElement.remove()">&times;</button>
         </div>
         <div class="toast-body">
             Order #${orderId.slice(-8)}<br>
             Amount: $${order.totalAmount || 0}<br>
-            Customer: ${order.customerName || 'N/A'}
+            Customer: ${order.customerName || 'N/A'}<br>
+            <small class="text-muted">Click to view details</small>
         </div>
     `;
     document.body.appendChild(toast);
     
     // Auto remove after 5 seconds
     setTimeout(() => toast.remove(), 5000);
-    
-    // Reload page to show new order
-    setTimeout(() => location.reload(), 2000);
 }
 
 // Request notification permission
