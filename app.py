@@ -305,6 +305,7 @@ def add_product():
     return render_template('add_product.html', categories=[{'name': c} for c in CATEGORIES])
 
 @app.route('/products/<product_id>/edit', methods=['GET', 'POST'])
+@app.route('/products/<product_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_product(product_id):
     conn = get_db()
@@ -326,16 +327,22 @@ def edit_product(product_id):
             product_id
         ))
         conn.commit()
+        
+        # Also update in Firebase
+        flash('Product updated successfully')
+        
         cur.close()
         conn.close()
-        
-        flash('Product updated successfully')
         return redirect(url_for('products'))
     
     cur.execute("SELECT * FROM products WHERE id = %s", (product_id,))
     product = cur.fetchone()
     cur.close()
     conn.close()
+    
+    if not product:
+        flash('Product not found')
+        return redirect(url_for('products'))
     
     return render_template('edit_product.html', product=product, categories=[{'name': c} for c in CATEGORIES])
 

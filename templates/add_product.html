@@ -26,28 +26,21 @@
                         <select class="form-select" name="category" required>
                             <option value="">Select category</option>
                             {% for cat in categories %}
-                            <option value="{{ cat.name }}" {% if product and product.category == cat.name %}selected{% endif %}>{{ cat.name }}</option>
+                            <option value="{{ cat.name }}">{{ cat.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     
                     <div class="col-md-6">
-                        <label class="form-label">In Stock</label>
-                        <div class="form-check form-switch mt-2">
-                            <input class="form-check-input" type="checkbox" name="inStock" id="inStock" {% if not product or product.is_active %}checked{% endif %}>
-                            <label class="form-check-label" for="inStock">
-                                Product is in stock
-                            </label>
-                        </div>
+                        <label class="form-label">Stock Quantity *</label>
+                        <input type="number" class="form-control" name="stock" required placeholder="e.g., 100" min="0" value="0">
                     </div>
                     
                     <div class="col-12">
-                        <label class="form-label">Product Image *</label>
-                        <div class="mb-2">
-                            <input type="file" class="form-control" name="imageFile" id="imageFile" accept="image/*">
-                            <small class="text-muted">Upload image (JPG, PNG, WebP) - Max 5MB</small>
-                        </div>
-                        <div class="text-center my-2">
+                        <label class="form-label">Image URL *</label>
+                        <input type="url" class="form-control" name="image_url" required placeholder="https://example.com/image.jpg">
+                        <small class="text-muted">Enter image URL</small>
+                    </div>
                             <strong>OR</strong>
                         </div>
                         <input type="url" class="form-control" name="imageUrl" id="imageUrl" placeholder="https://example.com/image.jpg" value="{{ product.image_url if product else '' }}">
@@ -75,25 +68,4 @@
         </div>
     </div>
 </div>
-
-<script>
-// Disable URL input when file is selected
-document.getElementById('imageFile').addEventListener('change', function() {
-    if (this.files.length > 0) {
-        document.getElementById('imageUrl').disabled = true;
-        document.getElementById('imageUrl').value = '';
-    } else {
-        document.getElementById('imageUrl').disabled = false;
-    }
-});
-
-// Disable file input when URL is entered
-document.getElementById('imageUrl').addEventListener('input', function() {
-    if (this.value.trim()) {
-        document.getElementById('imageFile').disabled = true;
-    } else {
-        document.getElementById('imageFile').disabled = false;
-    }
-});
-</script>
 {% endblock %}
